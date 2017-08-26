@@ -1,6 +1,7 @@
 package com.rsegeda.thesis.view;
 
 import com.rsegeda.thesis.config.Constants;
+import com.rsegeda.thesis.config.Selection;
 import com.rsegeda.thesis.location.LocationDto;
 import com.rsegeda.thesis.location.LocationService;
 import com.vaadin.icons.VaadinIcons;
@@ -19,9 +20,11 @@ import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.renderers.ImageRenderer;
+import lombok.Data;
 import net.sf.sprockets.google.Place;
 import net.sf.sprockets.google.Places;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.vaadin.addons.autocomplete.AutocompleteExtension;
 
 import java.io.IOException;
@@ -30,14 +33,21 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
  * Created by Roman Segeda on 09/04/2017.
  */
-
+@Data
+@Component
 public class HomeTab extends HorizontalLayout {
 
+    private final static Logger log =
+            Logger.getLogger(HomeTab.class.getName());
+
+    private final Selection selection;
+    private TabSheet tabSheet;
     private final LocationService locationService;
     /*
     Right panel
@@ -63,23 +73,13 @@ public class HomeTab extends HorizontalLayout {
     private TextField addLocationTextField = new TextField();
     private ComboBox<Place.Prediction> addLocationComboBox = new ComboBox<>();
     private Button addLocationButton = new Button();
-    private GoogleMap googleMap = new GoogleMap("AIzaSyCSoGguoU21dVqyW-k_o1fpl1_mUiSy4-Y", null, "english");
+    private GoogleMap googleMap = new GoogleMap("AIzaSyCSoGguoU21dVqyW-k_o1fpl1_mUiSy4-Y",
+            null, "english");
 
     @Autowired
-    public HomeTab(TabSheet tabsheet, LocationService locationService) {
-
+    public HomeTab(Selection selection, LocationService locationService) {
+        this.selection = selection;
         this.locationService = locationService;
-
-        this.locationList = new ArrayList<>();
-
-        algorithms.addAll(Constants.ALGORITHMS);
-        goals.addAll(Constants.GOALS);
-
-        setupLeftPanel(tabsheet);
-        setupRightPanel();
-
-        this.addComponents(leftPanel, rightPanel);
-        this.setSizeFull();
     }
 
     private void setupRightPanel() {
@@ -95,10 +95,10 @@ public class HomeTab extends HorizontalLayout {
         rightPanel.addComponent(googleMap);
     }
 
-    private void setupLeftPanel(TabSheet tabSheet) {
+    private void setupLeftPanel() {
         leftPanel.setSpacing(true);
 
-        setupBasicSetupLayout(tabSheet);
+        setupBasicSetupLayout();
         leftPanel.addComponent(basicSetupLayout);
 
         setupAddLocationLayout();
@@ -108,7 +108,7 @@ public class HomeTab extends HorizontalLayout {
         leftPanel.addComponent(locationGridLayout);
     }
 
-    private void setupBasicSetupLayout(TabSheet tabSheet) {
+    private void setupBasicSetupLayout() {
         algorithmRadioButtonGroup = new RadioButtonGroup<>("Algorithm", algorithms);
         algorithmRadioButtonGroup.setSelectedItem(algorithms.get(0));
 
@@ -123,8 +123,8 @@ public class HomeTab extends HorizontalLayout {
         runButton.setIcon(VaadinIcons.PLAY);
 
         runButton.addClickListener((Button.ClickListener) clickEvent -> {
-            ResultsTab resultsTab = (ResultsTab) tabSheet.getTab(1).getComponent();
-            tabSheet.setSelectedTab(1);
+            tabSheet.setSelectedTab(Constants.RESULTS_TAB_ID);
+            ResultsTab resultsTab = (ResultsTab) tabSheet.getTab(Constants.RESULTS_TAB_ID).getComponent();
             resultsTab.run(algorithmRadioButtonGroup.getSelectedItem().get());
         });
         basicSetupLayout.addComponent(runButton);
@@ -279,5 +279,19 @@ public class HomeTab extends HorizontalLayout {
         // Allow column hiding
         locationGrid.getColumns().forEach(column -> column.setHidable(true));
 
+    }
+
+    public void init() {
+
+        this.locationList = new ArrayList<>();
+
+        algorithms.addAll(Constants.ALGORITHMS);
+        goals.addAll(Constants.GOALS);
+
+        setupLeftPanel();
+        setupRightPanel();
+
+        this.addComponents(leftPanel, rightPanel);
+        this.setSizeFull();
     }
 }

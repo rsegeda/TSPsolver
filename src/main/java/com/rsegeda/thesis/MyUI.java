@@ -1,11 +1,14 @@
 package com.rsegeda.thesis;
 
+import com.rsegeda.thesis.config.Selection;
 import com.rsegeda.thesis.location.LocationMapper;
 import com.rsegeda.thesis.location.LocationService;
 import com.rsegeda.thesis.route.RouteMapper;
 import com.rsegeda.thesis.route.RouteService;
 import com.rsegeda.thesis.view.HomeTab;
+import com.rsegeda.thesis.view.InfoTab;
 import com.rsegeda.thesis.view.ResultsTab;
+import com.rsegeda.thesis.view.SettingsTab;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.VaadinServletConfiguration;
 import com.vaadin.event.UIEvents;
@@ -16,7 +19,6 @@ import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.servlet.annotation.WebServlet;
@@ -35,60 +37,47 @@ public class MyUI extends UI {
 
     private final static Logger log =
             Logger.getLogger(MyUI.class.getName());
+
+    private Selection selection;
+
     private final LocationService locationService;
     private final RouteService routeService;
     private final LocationMapper locationMapper;
     private final RouteMapper routeMapper;
     private Label appNameLabel;
     private CssLayout mainLayout;
-    private TabSheet tabsheet;
-    private HomeTab homeTab;
-    private ResultsTab resultsTab;
+
+    private TabSheet tabSheet;
+
+    private final HomeTab homeTab;
+    private final ResultsTab resultsTab;
+    private final SettingsTab settingsTab;
+    private final InfoTab infoTab;
 
     @Autowired
-    public MyUI(LocationService locationService, RouteService routeService, LocationMapper locationMapper, RouteMapper routeMapper) {
+    public MyUI(LocationService locationService, RouteService routeService, LocationMapper locationMapper,
+                RouteMapper routeMapper, Selection selection, HomeTab homeTab, ResultsTab resultsTab,
+                SettingsTab settingsTab, InfoTab infoTab) {
         this.locationService = locationService;
         this.routeService = routeService;
         this.locationMapper = locationMapper;
         this.routeMapper = routeMapper;
+        this.selection = selection;
+        this.homeTab = homeTab;
+        this.resultsTab = resultsTab;
+        this.settingsTab = settingsTab;
+
+        this.infoTab = infoTab;
     }
 
     @Override
     protected void init(VaadinRequest vaadinRequest) {
         setupMainLayout();
 
-        // Home tab
-        homeTab = new HomeTab(tabsheet, locationService);
-        tabsheet.addTab(homeTab, "Home");
-
-        // Results tab
-        resultsTab = new ResultsTab(locationService, routeService, locationMapper, routeMapper);
-        resultsTab.addComponent(new Label("Results tab content"));
-        tabsheet.addTab(resultsTab, "Results");
-
-        // Settings tab
-        VerticalLayout settingsTab = new VerticalLayout();
-        settingsTab.addComponent(new Label("Settings tab content"));
-        tabsheet.addTab(settingsTab, "Settings");
-
-        // Info tab
-        VerticalLayout infoTab = new VerticalLayout();
-        Label infoLabel = new Label("Created by Roman Segeda");
-        infoLabel.setSizeFull();
-        infoTab.addComponent(infoLabel);
-        tabsheet.addTab(infoTab, "Info");
-
-        mainLayout.addComponent(tabsheet);
-        mainLayout.setSizeFull();
         setContent(mainLayout);
 
         setPollInterval(1000);
-        addPollListener(new UIEvents.PollListener() {
-            @Override
-            public void poll(UIEvents.PollEvent event) {
-                log.info("Polling");
-            }
-        });
+        addPollListener((UIEvents.PollListener) event -> log.info("Polling"));
     }
 
     private void setupMainLayout() {
@@ -100,10 +89,30 @@ public class MyUI extends UI {
         appNameLabel.setHeight(8.0f, Unit.PERCENTAGE);
         mainLayout.addComponent(appNameLabel);
 
-        tabsheet = new TabSheet();
-        tabsheet.setWidth(100.0f, Unit.PERCENTAGE);
-        tabsheet.setHeight(90.0f, Unit.PERCENTAGE);
-        mainLayout.addComponent(tabsheet);
+        tabSheet = new TabSheet();
+
+        tabSheet.setWidth(100.0f, Unit.PERCENTAGE);
+        tabSheet.setHeight(90.0f, Unit.PERCENTAGE);
+
+        homeTab.setTabSheet(tabSheet);
+        homeTab.init();
+        tabSheet.addTab(homeTab, "Home");
+
+        resultsTab.init();
+        tabSheet.addTab(resultsTab, "Results");
+
+        settingsTab.init();
+        tabSheet.addTab(settingsTab, "Settings");
+
+        infoTab.init();
+        tabSheet.addTab(infoTab, "Info");
+
+        mainLayout.addComponent(tabSheet);
+
+        homeTab.setTabSheet(tabSheet);
+
+        mainLayout.setSizeFull();
+
     }
 
     @WebServlet(urlPatterns = "/*", name = "MyUIServlet", asyncSupported = true)

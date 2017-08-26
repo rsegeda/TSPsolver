@@ -1,6 +1,6 @@
 package com.rsegeda.thesis.component;
 
-import com.rsegeda.thesis.algorithm.HeldKarpAlgorithm;
+import com.rsegeda.thesis.algorithm.Algorithm;
 import com.vaadin.ui.Label;
 
 import java.util.Observable;
@@ -16,19 +16,19 @@ public class LabelWithObserver extends Label implements Observer {
     private final static Logger log =
             Logger.getLogger(LabelWithObserver.class.getName());
 
-    private HeldKarpAlgorithm heldKarpAlgorithm = null;
+    private Algorithm algorithm = null;
 
-    public LabelWithObserver(HeldKarpAlgorithm heldKarpAlgorithm) {
-        this.heldKarpAlgorithm = heldKarpAlgorithm;
+    public LabelWithObserver(Algorithm algorithm) {
+        this.algorithm = algorithm;
     }
 
     public void update(Observable o, Object arg) {
-        if (o instanceof HeldKarpAlgorithm) {
-            HeldKarpAlgorithm heldKarpAlgorithm = (HeldKarpAlgorithm) o;
-            this.heldKarpAlgorithm = heldKarpAlgorithm;
+        if (o instanceof Algorithm) {
+            Algorithm algorithm = (Algorithm) o;
+            this.algorithm = algorithm;
 
             if (arg instanceof Integer) {
-                this.heldKarpAlgorithm.setValue((Integer) arg);
+                this.algorithm.setValue((Integer) arg);
                 this.setValue("Current state is: " + arg);
             }
 
