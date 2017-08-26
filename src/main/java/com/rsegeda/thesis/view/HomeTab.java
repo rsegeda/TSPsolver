@@ -1,7 +1,7 @@
 package com.rsegeda.thesis.view;
 
+import com.rsegeda.thesis.component.Selection;
 import com.rsegeda.thesis.config.Constants;
-import com.rsegeda.thesis.config.Selection;
 import com.rsegeda.thesis.location.LocationDto;
 import com.rsegeda.thesis.location.LocationService;
 import com.vaadin.icons.VaadinIcons;
@@ -23,6 +23,8 @@ import com.vaadin.ui.renderers.ImageRenderer;
 import lombok.Data;
 import net.sf.sprockets.google.Place;
 import net.sf.sprockets.google.Places;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.vaadin.addons.autocomplete.AutocompleteExtension;
@@ -33,7 +35,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
@@ -43,8 +44,7 @@ import java.util.stream.Collectors;
 @Component
 public class HomeTab extends HorizontalLayout {
 
-    private final static Logger log =
-            Logger.getLogger(HomeTab.class.getName());
+    private static Logger logger = LoggerFactory.getLogger(HomeTab.class);
 
     private final Selection selection;
     private TabSheet tabSheet;
@@ -122,14 +122,20 @@ public class HomeTab extends HorizontalLayout {
         Button runButton = new Button("Run");
         runButton.setIcon(VaadinIcons.PLAY);
 
-        runButton.addClickListener((Button.ClickListener) clickEvent -> {
-            tabSheet.setSelectedTab(Constants.RESULTS_TAB_ID);
-            ResultsTab resultsTab = (ResultsTab) tabSheet.getTab(Constants.RESULTS_TAB_ID).getComponent();
-            resultsTab.run(algorithmRadioButtonGroup.getSelectedItem().get());
-        });
+        runButton.addClickListener((Button.ClickListener) clickEvent ->
+                runAlgorithm(algorithmRadioButtonGroup.getSelectedItem().get()));
         basicSetupLayout.addComponent(runButton);
 
         basicSetupLayout.setSizeFull();
+    }
+
+    private void runAlgorithm(String algorithm) {
+        tabSheet.setSelectedTab(Constants.RESULTS_TAB_ID);
+        ResultsTab resultsTab = (ResultsTab) tabSheet.getTab(Constants.RESULTS_TAB_ID).getComponent();
+
+        selection.setLocationDtos(locationList);
+
+        resultsTab.run(algorithm);
     }
 
     private void setupAddLocationLayout() {
@@ -281,7 +287,9 @@ public class HomeTab extends HorizontalLayout {
 
     }
 
-    public void init() {
+    public void init(TabSheet tabSheet) {
+
+        this.tabSheet = tabSheet;
 
         this.locationList = new ArrayList<>();
 

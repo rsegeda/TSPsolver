@@ -2,10 +2,11 @@ package com.rsegeda.thesis.component;
 
 import com.rsegeda.thesis.algorithm.Algorithm;
 import com.vaadin.ui.Label;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Observable;
 import java.util.Observer;
-import java.util.logging.Logger;
 
 /**
  * Copyright 2017 by Avid Technology, Inc.
@@ -13,8 +14,7 @@ import java.util.logging.Logger;
  */
 public class LabelWithObserver extends Label implements Observer {
 
-    private final static Logger log =
-            Logger.getLogger(LabelWithObserver.class.getName());
+    private static Logger logger = LoggerFactory.getLogger(LabelWithObserver.class);
 
     private Algorithm algorithm = null;
 
@@ -33,7 +33,7 @@ public class LabelWithObserver extends Label implements Observer {
             }
 
         } else {
-            log.warning("The algorithm was not of the correct type");
+            logger.warn("The algorithm was not of the correct type");
         }
     }
 }

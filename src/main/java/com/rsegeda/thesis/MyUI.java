@@ -1,6 +1,6 @@
 package com.rsegeda.thesis;
 
-import com.rsegeda.thesis.config.Selection;
+import com.rsegeda.thesis.component.Selection;
 import com.rsegeda.thesis.location.LocationMapper;
 import com.rsegeda.thesis.location.LocationService;
 import com.rsegeda.thesis.route.RouteMapper;
@@ -19,10 +19,11 @@ import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.UI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.servlet.annotation.WebServlet;
-import java.util.logging.Logger;
 
 /**
  * This UI is the application entry point. A UI may either represent a browser window
@@ -35,8 +36,7 @@ import java.util.logging.Logger;
 @SpringUI
 public class MyUI extends UI {
 
-    private final static Logger log =
-            Logger.getLogger(MyUI.class.getName());
+    private static Logger logger = LoggerFactory.getLogger(MyUI.class);
 
     private Selection selection;
 
@@ -77,7 +77,7 @@ public class MyUI extends UI {
         setContent(mainLayout);
 
         setPollInterval(1000);
-        addPollListener((UIEvents.PollListener) event -> log.info("Polling"));
+        addPollListener((UIEvents.PollListener) event -> logger.info("Polling"));
     }
 
     private void setupMainLayout() {
@@ -94,8 +94,7 @@ public class MyUI extends UI {
         tabSheet.setWidth(100.0f, Unit.PERCENTAGE);
         tabSheet.setHeight(90.0f, Unit.PERCENTAGE);
 
-        homeTab.setTabSheet(tabSheet);
-        homeTab.init();
+        homeTab.init(tabSheet);
         tabSheet.addTab(homeTab, "Home");
 
         resultsTab.init();

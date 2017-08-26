@@ -3,8 +3,8 @@ package com.rsegeda.thesis.view;
 import com.rsegeda.thesis.algorithm.HeldKarpAlgorithm;
 import com.rsegeda.thesis.algorithm.TspAlgorithm;
 import com.rsegeda.thesis.component.LabelWithObserver;
+import com.rsegeda.thesis.component.Selection;
 import com.rsegeda.thesis.config.Constants;
-import com.rsegeda.thesis.config.Selection;
 import com.rsegeda.thesis.location.LocationDto;
 import com.rsegeda.thesis.location.LocationMapper;
 import com.rsegeda.thesis.location.LocationService;
@@ -12,13 +12,13 @@ import com.rsegeda.thesis.route.RouteMapper;
 import com.rsegeda.thesis.route.RouteService;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static com.rsegeda.thesis.config.Constants.THE_HELD_KARP_LOWER_BOUND;
 
@@ -29,8 +29,8 @@ import static com.rsegeda.thesis.config.Constants.THE_HELD_KARP_LOWER_BOUND;
 @Component
 public class ResultsTab extends HorizontalLayout {
 
-    private final static Logger LOGGER =
-            Logger.getLogger(ResultsTab.class.getName());
+
+    private static Logger logger = LoggerFactory.getLogger(HomeTab.class);
 
     private final Selection selection;
 
@@ -84,7 +84,7 @@ public class ResultsTab extends HorizontalLayout {
                 break;
 
             default:
-                LOGGER.log(Level.SEVERE, "Incorrect algorithm selection");
+                logger.error("Incorrect algorithm selection");
                 break;
         }
 
