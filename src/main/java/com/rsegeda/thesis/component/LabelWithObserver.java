@@ -2,6 +2,7 @@ package com.rsegeda.thesis.component;
 
 import com.rsegeda.thesis.algorithm.Algorithm;
 import com.vaadin.ui.Label;
+import lombok.EqualsAndHashCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,6 +13,7 @@ import java.util.Observer;
  * Copyright 2017 by Avid Technology, Inc.
  * Created by roman.segeda@avid.com on 20/08/2017.
  */
+@EqualsAndHashCode
 public class LabelWithObserver extends Label implements Observer {
 
     private static Logger logger = LoggerFactory.getLogger(LabelWithObserver.class);
@@ -24,8 +26,8 @@ public class LabelWithObserver extends Label implements Observer {
 
     public void update(Observable o, Object arg) {
         if (o instanceof Algorithm) {
-            Algorithm algorithm = (Algorithm) o;
-            this.algorithm = algorithm;
+            Algorithm alg = (Algorithm) o;
+            this.algorithm = alg;
 
             if (arg instanceof Integer) {
                 this.algorithm.setValue((Integer) arg);

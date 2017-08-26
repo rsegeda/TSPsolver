@@ -12,6 +12,7 @@ import com.rsegeda.thesis.route.RouteMapper;
 import com.rsegeda.thesis.route.RouteService;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
+import lombok.EqualsAndHashCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,10 +26,9 @@ import static com.rsegeda.thesis.config.Constants.THE_HELD_KARP_LOWER_BOUND;
 /**
  * Created by Roman Segeda on 09/04/2017.
  */
-
+@EqualsAndHashCode
 @Component
 public class ResultsTab extends HorizontalLayout {
-
 
     private static Logger logger = LoggerFactory.getLogger(HomeTab.class);
 

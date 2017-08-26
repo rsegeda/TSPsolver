@@ -175,7 +175,7 @@ public class HomeTab extends HorizontalLayout {
                 newPlace = searchPlaceResponse.getResult();
 
             } catch (IOException e) {
-                e.printStackTrace();
+                logger.error("Error while adding location", e);
             }
 
             if (newPlace == null) {
@@ -212,9 +212,7 @@ public class HomeTab extends HorizontalLayout {
 
     private void restoreMarkers() {
 
-        locationList.forEach(locationDto -> {
-            createMarker(locationDto.getPlaceName(), locationDto.getLatLon());
-        });
+        locationList.forEach(locationDto -> createMarker(locationDto.getPlaceName(), locationDto.getLatLon()));
     }
 
     private void createMarker(String name, LatLon latLon) {
@@ -243,10 +241,10 @@ public class HomeTab extends HorizontalLayout {
             }
             predictions = autocompleteResponse.getResult();
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("Cannot suggest a prediction", e);
         }
 
-        if (predictions == null || predictions.size() < 1) {
+        if (predictions == null || predictions.isEmpty()) {
             return Collections.emptyList();
         } else {
             return predictions.stream().filter(
