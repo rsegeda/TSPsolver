@@ -12,7 +12,6 @@ import com.rsegeda.thesis.route.RouteMapper;
 import com.rsegeda.thesis.route.RouteService;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
-import lombok.EqualsAndHashCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +25,6 @@ import static com.rsegeda.thesis.config.Constants.THE_HELD_KARP_LOWER_BOUND;
 /**
  * Created by Roman Segeda on 09/04/2017.
  */
-@EqualsAndHashCode
 @Component
 public class ResultsTab extends HorizontalLayout {
 
@@ -39,7 +37,7 @@ public class ResultsTab extends HorizontalLayout {
 
     private final LocationMapper locationMapper;
     private final RouteMapper routeMapper;
-    TspAlgorithm tspAlgorithm;
+    private TspAlgorithm tspAlgorithm;
     private List<LocationDto> locationList;
     private String selectedAlgorithm = "";
     private Label selectedAlgorithmLabel;
@@ -56,11 +54,10 @@ public class ResultsTab extends HorizontalLayout {
         this.selection = selection;
     }
 
-    public void run(String algorithmName) {
+    public void run() {
 
-        selectedAlgorithm = algorithmName;
-        selectedAlgorithmLabel.setValue("You have selected: " + selectedAlgorithm);
-
+        selectedAlgorithm = selection.getAlgorithmName();
+        selectedAlgorithmLabel.setValue("Algorithm: " + selectedAlgorithm);
         showProgressPane();
 
         if (selectedAlgorithm.equals(THE_HELD_KARP_LOWER_BOUND)) {
@@ -80,7 +77,7 @@ public class ResultsTab extends HorizontalLayout {
         switch (selectedAlgorithm) {
 
             case Constants.THE_HELD_KARP_LOWER_BOUND:
-                this.tspAlgorithm = new HeldKarpAlgorithm();
+                this.tspAlgorithm = new HeldKarpAlgorithm(selection);
                 break;
 
             default:

@@ -16,16 +16,15 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.RadioButtonGroup;
-import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.renderers.ImageRenderer;
-import lombok.Data;
 import net.sf.sprockets.google.Place;
 import net.sf.sprockets.google.Places;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Component;
 import org.vaadin.addons.autocomplete.AutocompleteExtension;
 
@@ -40,15 +39,14 @@ import java.util.stream.Collectors;
 /**
  * Created by Roman Segeda on 09/04/2017.
  */
-@Data
 @Component
 public class HomeTab extends HorizontalLayout {
 
     private static Logger logger = LoggerFactory.getLogger(HomeTab.class);
 
     private final Selection selection;
-    private TabSheet tabSheet;
     private final LocationService locationService;
+    private final JmsTemplate jmsTemplate;
     /*
     Right panel
      */
@@ -77,9 +75,10 @@ public class HomeTab extends HorizontalLayout {
             null, "english");
 
     @Autowired
-    public HomeTab(Selection selection, LocationService locationService) {
+    public HomeTab(Selection selection, LocationService locationService, JmsTemplate jmsTemplate) {
         this.selection = selection;
         this.locationService = locationService;
+        this.jmsTemplate = jmsTemplate;
     }
 
     private void setupRightPanel() {
@@ -130,12 +129,15 @@ public class HomeTab extends HorizontalLayout {
     }
 
     private void runAlgorithm(String algorithm) {
-        tabSheet.setSelectedTab(Constants.RESULTS_TAB_ID);
-        ResultsTab resultsTab = (ResultsTab) tabSheet.getTab(Constants.RESULTS_TAB_ID).getComponent();
 
+        selection.setAlgorithmName(algorithm);
         selection.setLocationDtos(locationList);
 
-        resultsTab.run(algorithm);
+        notifyMainTabSheet("runAlgorithm", "");
+    }
+
+    private void notifyMainTabSheet(String destination, String message) {
+        jmsTemplate.convertAndSend("runAlgorithm", message);
     }
 
     private void setupAddLocationLayout() {
@@ -285,9 +287,9 @@ public class HomeTab extends HorizontalLayout {
 
     }
 
-    public void init(TabSheet tabSheet) {
+    public void init() {
 
-        this.tabSheet = tabSheet;
+        //        this.tabSheet = tabSheet;
 
         this.locationList = new ArrayList<>();
 

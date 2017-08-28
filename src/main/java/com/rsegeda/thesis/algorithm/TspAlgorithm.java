@@ -1,21 +1,29 @@
 package com.rsegeda.thesis.algorithm;
 
+import com.rsegeda.thesis.component.Selection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import java.util.Observable;
-import java.util.logging.Logger;
 
 /**
  * Copyright 2017 by Avid Technology, Inc.
  * Created by roman.segeda@avid.com on 25/08/2017.
  */
 public class TspAlgorithm extends Observable implements Algorithm {
-    private static final Logger log =
-            Logger.getLogger(HeldKarpAlgorithm.class.getName());
 
-    private Thread thread;
+    private static final Logger logger = LoggerFactory.getLogger(TspAlgorithm.class);
 
-    private int n = 0;
+    public final Selection selection;
+    public Thread thread;
+    public int n = 0;
+    public boolean stopAlgorithm = false;
 
-    private boolean stopAlgorithm = false;
+    @Autowired
+    public TspAlgorithm(Selection selection) {
+        this.selection = selection;
+    }
 
     public int getValue() {
         return n;
@@ -35,7 +43,7 @@ public class TspAlgorithm extends Observable implements Algorithm {
         n = 0;
         thread = new Thread(this);
         thread.start();
-        log.info("Algorithm started");
+        logger.info("Algorithm started");
     }
 
     public void run() {
@@ -49,7 +57,7 @@ public class TspAlgorithm extends Observable implements Algorithm {
 
             try {
                 Thread.sleep(1000);
-            } catch (InterruptedException e) { e.printStackTrace(); }
+            } catch (InterruptedException e) { logger.error("Cannot call sleep on thread.", e); }
         }
 
         this.setValue(100);
@@ -63,4 +71,6 @@ public class TspAlgorithm extends Observable implements Algorithm {
     public void setStopAlgorithm(boolean stopAlgorithm) {
         this.stopAlgorithm = stopAlgorithm;
     }
+
+
 }

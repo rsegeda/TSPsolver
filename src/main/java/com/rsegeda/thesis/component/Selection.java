@@ -16,6 +16,8 @@ public class Selection {
 
     private Integer value = 0;
 
+    private String algorithmName;
+
     private List<LocationDto> locationDtos;
 
 }

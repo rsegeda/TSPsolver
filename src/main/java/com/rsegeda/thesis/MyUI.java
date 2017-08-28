@@ -7,6 +7,7 @@ import com.rsegeda.thesis.route.RouteMapper;
 import com.rsegeda.thesis.route.RouteService;
 import com.rsegeda.thesis.view.HomeTab;
 import com.rsegeda.thesis.view.InfoTab;
+import com.rsegeda.thesis.view.MainTabSheet;
 import com.rsegeda.thesis.view.ResultsTab;
 import com.rsegeda.thesis.view.SettingsTab;
 import com.vaadin.annotations.Theme;
@@ -49,6 +50,8 @@ public class MyUI extends UI {
 
     private TabSheet tabSheet;
 
+    private final MainTabSheet mainTabSheet;
+
     private final HomeTab homeTab;
     private final ResultsTab resultsTab;
     private final SettingsTab settingsTab;
@@ -56,17 +59,20 @@ public class MyUI extends UI {
 
     @Autowired
     public MyUI(LocationService locationService, RouteService routeService, LocationMapper locationMapper,
-                RouteMapper routeMapper, Selection selection, HomeTab homeTab, ResultsTab resultsTab,
+                RouteMapper routeMapper, Selection selection, MainTabSheet mainTabSheet, HomeTab homeTab, ResultsTab resultsTab,
                 SettingsTab settingsTab, InfoTab infoTab) {
         this.locationService = locationService;
         this.routeService = routeService;
         this.locationMapper = locationMapper;
         this.routeMapper = routeMapper;
+
         this.selection = selection;
+
+        this.mainTabSheet = mainTabSheet;
+
         this.homeTab = homeTab;
         this.resultsTab = resultsTab;
         this.settingsTab = settingsTab;
-
         this.infoTab = infoTab;
     }
 
@@ -81,6 +87,7 @@ public class MyUI extends UI {
     }
 
     private void setupMainLayout() {
+
         mainLayout = new CssLayout();
         mainLayout.setStyleName("homeMainLayout");
 
@@ -89,29 +96,10 @@ public class MyUI extends UI {
         appNameLabel.setHeight(8.0f, Unit.PERCENTAGE);
         mainLayout.addComponent(appNameLabel);
 
-        tabSheet = new TabSheet();
-
-        tabSheet.setWidth(100.0f, Unit.PERCENTAGE);
-        tabSheet.setHeight(90.0f, Unit.PERCENTAGE);
-
-        homeTab.init(tabSheet);
-        tabSheet.addTab(homeTab, "Home");
-
-        resultsTab.init();
-        tabSheet.addTab(resultsTab, "Results");
-
-        settingsTab.init();
-        tabSheet.addTab(settingsTab, "Settings");
-
-        infoTab.init();
-        tabSheet.addTab(infoTab, "Info");
-
-        mainLayout.addComponent(tabSheet);
-
-        homeTab.setTabSheet(tabSheet);
+        mainTabSheet.init();
+        mainLayout.addComponent(mainTabSheet);
 
         mainLayout.setSizeFull();
-
     }
 
     @WebServlet(urlPatterns = "/*", name = "MyUIServlet", asyncSupported = true)
