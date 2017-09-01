@@ -20,8 +20,7 @@ import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.UI;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.servlet.annotation.WebServlet;
@@ -33,13 +32,10 @@ import javax.servlet.annotation.WebServlet;
  * The UI is initialized using {@link #init(VaadinRequest)}. This method is intended to be
  * overridden to add component to the user interface and initialize non-component functionality.
  */
+@Slf4j
 @Theme("mytheme")
 @SpringUI
 public class MyUI extends UI {
-
-    private static Logger logger = LoggerFactory.getLogger(MyUI.class);
-
-    private Selection selection;
 
     private final LocationService locationService;
     private final RouteService routeService;
@@ -51,6 +47,7 @@ public class MyUI extends UI {
     private TabSheet tabSheet;
 
     private final MainTabSheet mainTabSheet;
+    private final Selection selection;
 
     private final HomeTab homeTab;
     private final ResultsTab resultsTab;
@@ -83,7 +80,7 @@ public class MyUI extends UI {
         setContent(mainLayout);
 
         setPollInterval(1000);
-        addPollListener((UIEvents.PollListener) event -> logger.info("Polling"));
+        addPollListener((UIEvents.PollListener) event -> log.info("Polling"));
     }
 
     private void setupMainLayout() {

@@ -6,9 +6,9 @@ package com.rsegeda.thesis.algorithm;
  */
 public interface Algorithm extends Runnable{
 
-    int getValue();
+    int getProgress();
 
-    void setValue(int x);
+    void setProgress(int x);
 
     Thread getThread();
 

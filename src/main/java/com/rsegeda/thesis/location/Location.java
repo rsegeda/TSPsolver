@@ -23,4 +23,5 @@ public class Location {
     String placeId;
     String placeName;
     LatLon latLon;
+    Integer index;
 }

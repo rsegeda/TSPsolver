@@ -19,10 +19,9 @@ import com.vaadin.ui.RadioButtonGroup;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.renderers.ImageRenderer;
+import lombok.extern.slf4j.Slf4j;
 import net.sf.sprockets.google.Place;
 import net.sf.sprockets.google.Places;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Component;
@@ -39,10 +38,9 @@ import java.util.stream.Collectors;
 /**
  * Created by Roman Segeda on 09/04/2017.
  */
+@Slf4j
 @Component
 public class HomeTab extends HorizontalLayout {
-
-    private static Logger logger = LoggerFactory.getLogger(HomeTab.class);
 
     private final Selection selection;
     private final LocationService locationService;
@@ -73,6 +71,7 @@ public class HomeTab extends HorizontalLayout {
     private Button addLocationButton = new Button();
     private GoogleMap googleMap = new GoogleMap("AIzaSyCSoGguoU21dVqyW-k_o1fpl1_mUiSy4-Y",
             null, "english");
+    private boolean created = false;
 
     @Autowired
     public HomeTab(Selection selection, LocationService locationService, JmsTemplate jmsTemplate) {
@@ -177,7 +176,7 @@ public class HomeTab extends HorizontalLayout {
                 newPlace = searchPlaceResponse.getResult();
 
             } catch (IOException e) {
-                logger.error("Error while adding location", e);
+                log.error("Error while adding location", e);
             }
 
             if (newPlace == null) {
@@ -243,7 +242,7 @@ public class HomeTab extends HorizontalLayout {
             }
             predictions = autocompleteResponse.getResult();
         } catch (IOException e) {
-            logger.error("Cannot suggest a prediction", e);
+            log.error("Cannot suggest a prediction", e);
         }
 
         if (predictions == null || predictions.isEmpty()) {
@@ -289,17 +288,19 @@ public class HomeTab extends HorizontalLayout {
 
     public void init() {
 
-        //        this.tabSheet = tabSheet;
+        if (!created) {
 
-        this.locationList = new ArrayList<>();
+            locationList = new ArrayList<>();
+            algorithms.addAll(Constants.ALGORITHMS);
+            goals.addAll(Constants.GOALS);
 
-        algorithms.addAll(Constants.ALGORITHMS);
-        goals.addAll(Constants.GOALS);
+            setupLeftPanel();
+            setupRightPanel();
 
-        setupLeftPanel();
-        setupRightPanel();
+            addComponents(leftPanel, rightPanel);
+            setSizeFull();
+            created = true;
+        }
 
-        this.addComponents(leftPanel, rightPanel);
-        this.setSizeFull();
     }
 }

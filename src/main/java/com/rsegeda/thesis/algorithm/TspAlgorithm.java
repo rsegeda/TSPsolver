@@ -1,66 +1,73 @@
 package com.rsegeda.thesis.algorithm;
 
 import com.rsegeda.thesis.component.Selection;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.rsegeda.thesis.location.LocationDto;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jms.core.JmsTemplate;
 
+import java.util.List;
 import java.util.Observable;
 
 /**
  * Copyright 2017 by Avid Technology, Inc.
  * Created by roman.segeda@avid.com on 25/08/2017.
  */
+@Slf4j
 public class TspAlgorithm extends Observable implements Algorithm {
 
-    private static final Logger logger = LoggerFactory.getLogger(TspAlgorithm.class);
-
     public final Selection selection;
+    public final JmsTemplate jmsTemplate;
+    @Getter
     public Thread thread;
-    public int n = 0;
+    @Getter
+    public int progress = 0;
     public boolean stopAlgorithm = false;
 
     @Autowired
-    public TspAlgorithm(Selection selection) {
+    public TspAlgorithm(Selection selection, JmsTemplate jmsTemplate) {
         this.selection = selection;
+        this.jmsTemplate = jmsTemplate;
     }
 
-    public int getValue() {
-        return n;
-    }
-
-    public void setValue(int x) {
-        this.n = x;
+    public void setProgress(int x) {
+        this.progress = x;
         setChanged();
         notifyObservers();    // makes the observers print null
     }
 
-    public Thread getThread() {
-        return thread;
-    }
-
     public void start() {
-        n = 0;
+        progress = 0;
         thread = new Thread(this);
         thread.start();
-        logger.info("Algorithm started");
+        log.info("Algorithm started");
     }
 
     public void run() {
 
-        while (n < 100 && !stopAlgorithm) {
+        List<LocationDto> locationDtoList = selection.getLocationDtos();
+        List<LocationDto> result = locationDtoList;
+        while (progress < 100 && !stopAlgorithm) {
 
-            n = n + 10;
+            progress = progress + 10;
             setChanged();
 
-            notifyObservers(n);
+            notifyObservers(progress);
 
             try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) { logger.error("Cannot call sleep on thread.", e); }
+                Thread.sleep(100);
+            } catch (InterruptedException e) { log.error("Cannot call sleep on thread.", e); }
         }
 
-        this.setValue(100);
+        setProgress(100);
+        int index = 1;
+        for (LocationDto locationDto : result) {
+            locationDto.setIndex(index);
+            index++;
+        }
+        selection.setCalculatedLocationDtos(result);
+        jmsTemplate.convertAndSend("algorithmResult", "");
     }
 
     @Override

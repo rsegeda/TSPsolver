@@ -1,36 +1,48 @@
 package com.rsegeda.thesis.algorithm;
 
 import com.rsegeda.thesis.component.Selection;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.rsegeda.thesis.location.LocationDto;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.jms.core.JmsTemplate;
+
+import java.util.List;
 
 /**
  * Created by Roman Segeda on 01/08/2017.
  */
+@Slf4j
 public class HeldKarpAlgorithm extends TspAlgorithm {
 
-    private static Logger logger = LoggerFactory.getLogger(HeldKarpAlgorithm.class);
-
-    public HeldKarpAlgorithm(Selection selection) {
-        super(selection);
+    public HeldKarpAlgorithm(Selection selection, JmsTemplate jmsTemplate) {
+        super(selection, jmsTemplate);
     }
 
     @Override
     public void run() {
 
-        while (n < 200 && !stopAlgorithm) {
+        List<LocationDto> locationDtoList = selection.getLocationDtos();
+        List<LocationDto> result = locationDtoList;
+        while (progress < 100 && !stopAlgorithm) {
 
-            n = n + 20;
+            progress = progress + 10;
             setChanged();
 
-            notifyObservers(n);
+            notifyObservers(progress);
 
             try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) { logger.error("Cannot call sleep on thread.", e); }
+                Thread.sleep(150);
+            } catch (InterruptedException e) { log.error("Cannot call sleep on thread.", e); }
         }
 
-        this.setValue(100);
+        setProgress(100);
+        int index = 1;
+        for (LocationDto locationDto : result) {
+            locationDto.setIndex(index);
+            index++;
+        }
+        selection.setCalculatedLocationDtos(result);
+        jmsTemplate.convertAndSend("algorithmResult", "");
+
     }
 
     @Override

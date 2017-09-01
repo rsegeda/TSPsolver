@@ -1,9 +1,7 @@
 package com.rsegeda.thesis.view;
 
 import com.vaadin.ui.TabSheet;
-import lombok.Data;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Component;
@@ -12,11 +10,9 @@ import org.springframework.stereotype.Component;
  * Copyright 2017 by Avid Technology, Inc.
  * Created by roman.segeda@avid.com on 27/08/2017.
  */
-@Data
+@Slf4j
 @Component
 public class MainTabSheet extends TabSheet {
-
-    private static Logger logger = LoggerFactory.getLogger(MainTabSheet.class);
 
     private final HomeTab homeTab;
     private final ResultsTab resultsTab;

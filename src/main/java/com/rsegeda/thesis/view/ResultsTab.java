@@ -10,14 +10,18 @@ import com.rsegeda.thesis.location.LocationMapper;
 import com.rsegeda.thesis.location.LocationService;
 import com.rsegeda.thesis.route.RouteMapper;
 import com.rsegeda.thesis.route.RouteService;
+import com.vaadin.ui.Grid;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.vaadin.ui.VerticalLayout;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jms.annotation.JmsListener;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static com.rsegeda.thesis.config.Constants.THE_HELD_KARP_LOWER_BOUND;
@@ -25,12 +29,12 @@ import static com.rsegeda.thesis.config.Constants.THE_HELD_KARP_LOWER_BOUND;
 /**
  * Created by Roman Segeda on 09/04/2017.
  */
+@Slf4j
 @Component
-public class ResultsTab extends HorizontalLayout {
-
-    private static Logger logger = LoggerFactory.getLogger(HomeTab.class);
+public class ResultsTab extends VerticalLayout {
 
     private final Selection selection;
+    private final JmsTemplate jmsTemplate;
 
     private final LocationService locationService;
     private final RouteService routeService;
@@ -43,22 +47,26 @@ public class ResultsTab extends HorizontalLayout {
     private Label selectedAlgorithmLabel;
     private LabelWithObserver currentAlgorithmResult;
 
+    private Grid<LocationDto> locationGrid;
+    private boolean created = false;
+
     @Autowired
     public ResultsTab(LocationService locationService, RouteService routeService, LocationMapper locationMapper,
-                      RouteMapper routeMapper, Selection selection) {
+                      RouteMapper routeMapper, Selection selection, JmsTemplate jmsTemplate) {
 
         this.locationService = locationService;
         this.routeService = routeService;
         this.locationMapper = locationMapper;
         this.routeMapper = routeMapper;
         this.selection = selection;
+        this.jmsTemplate = jmsTemplate;
     }
 
     public void run() {
-
+        clearOldResults();
         selectedAlgorithm = selection.getAlgorithmName();
         selectedAlgorithmLabel.setValue("Algorithm: " + selectedAlgorithm);
-        showProgressPane();
+        setupObservers();
 
         if (selectedAlgorithm.equals(THE_HELD_KARP_LOWER_BOUND)) {
             tspAlgorithm.start();
@@ -68,43 +76,75 @@ public class ResultsTab extends HorizontalLayout {
         }
     }
 
-    private void showProgressPane() {
+    private void clearOldResults() {
+        locationGrid.setItems(Collections.emptyList());
+    }
+
+    private void setupObservers() {
 
         if (currentAlgorithmResult != null && currentAlgorithmResult.isAttached()) {
-            this.removeComponent(currentAlgorithmResult);
+            removeComponent(currentAlgorithmResult);
         }
 
         switch (selectedAlgorithm) {
 
             case Constants.THE_HELD_KARP_LOWER_BOUND:
-                this.tspAlgorithm = new HeldKarpAlgorithm(selection);
+                tspAlgorithm = new HeldKarpAlgorithm(selection, jmsTemplate);
                 break;
 
             default:
-                logger.error("Incorrect algorithm selection");
+                log.error("Incorrect algorithm selection");
                 break;
         }
 
         if (tspAlgorithm == null) {
             return;
         }
-        currentAlgorithmResult = new LabelWithObserver(this.tspAlgorithm);
+        currentAlgorithmResult = new LabelWithObserver(this.jmsTemplate, this.tspAlgorithm);
 
-        this.addComponent(currentAlgorithmResult);
+        addComponent(currentAlgorithmResult);
 
-        this.tspAlgorithm.addObserver(currentAlgorithmResult);
+        tspAlgorithm.addObserver(currentAlgorithmResult);
     }
 
 
     public void init() {
 
-        this.locationList = new ArrayList<>();
+        if (!created) {
+            this.locationList = new ArrayList<>();
 
-        selectedAlgorithmLabel = new Label("");
-        this.addComponent(selectedAlgorithmLabel);
+            selectedAlgorithmLabel = new Label("");
 
-        this.setSizeFull();
+            HorizontalLayout infoPanel = new HorizontalLayout();
+            infoPanel.addComponent(selectedAlgorithmLabel);
+            addComponent(infoPanel);
+            HorizontalLayout resultsPanel = new HorizontalLayout();
 
-        this.addComponent(new Label("Results tab content"));
+            locationGrid = new Grid<>();
+
+            locationGrid.setSizeFull();
+            locationGrid.addStyleName("locationGrid");
+            locationGrid.addColumn(LocationDto::getIndex).setCaption("Order").setExpandRatio(2);
+            locationGrid.addColumn(LocationDto::getPlaceName).setCaption("Name").setExpandRatio(98);
+
+            // Allow column hiding
+            locationGrid.getColumns().forEach(column -> column.setHidable(true));
+            locationGrid.setId("resultsGrid");
+            locationGrid.setStyleName("resultsGrid");
+            resultsPanel.setSizeFull();
+            resultsPanel.addComponent(locationGrid);
+            resultsPanel.addComponent(new Label("Other data"));
+            addComponent(resultsPanel);
+
+            created = true;
+        }
+
+    }
+
+    @JmsListener(destination = "algorithmResult", containerFactory = "jmsListenerFactory")
+    public void startAlgorithm() {
+        locationList = selection.getCalculatedLocationDtos();
+        locationGrid.setItems(locationList);
+        //        locationGrid.setWidth("30%");
     }
 }

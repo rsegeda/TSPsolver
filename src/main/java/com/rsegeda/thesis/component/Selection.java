@@ -20,4 +20,6 @@ public class Selection {
 
     private List<LocationDto> locationDtos;
 
+    private List<LocationDto> calculatedLocationDtos;
+
 }
