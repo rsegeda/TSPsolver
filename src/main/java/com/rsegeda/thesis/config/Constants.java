@@ -32,5 +32,7 @@ public class Constants {
     public static final int SETTINGS_TAB = 2;
     public static final int INFO_TAB = 3;
 
-
+    public static final String PREPARING_STATE = "Preparing";
+    public static final String COMPUTING_STATE = "Computing";
+    public static final String READY_STATE = "Ready";
 }

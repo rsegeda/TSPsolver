@@ -1,24 +1,30 @@
 package com.rsegeda.thesis.algorithm;
 
 import com.rsegeda.thesis.component.Selection;
+import com.rsegeda.thesis.config.Constants;
 import com.rsegeda.thesis.location.LocationDto;
+import com.rsegeda.thesis.utils.DirectionsService;
+import javafx.util.Pair;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.core.JmsTemplate;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Observable;
+import java.util.Map;
 
 /**
  * Copyright 2017 by Avid Technology, Inc.
  * Created by roman.segeda@avid.com on 25/08/2017.
  */
 @Slf4j
-public class TspAlgorithm extends Observable implements Algorithm {
+public class TspAlgorithm implements Algorithm {
 
     public final Selection selection;
     public final JmsTemplate jmsTemplate;
+    public final DirectionsService directionsService;
     @Getter
     public Thread thread;
     @Getter
@@ -26,15 +32,14 @@ public class TspAlgorithm extends Observable implements Algorithm {
     public boolean stopAlgorithm = false;
 
     @Autowired
-    public TspAlgorithm(Selection selection, JmsTemplate jmsTemplate) {
+    public TspAlgorithm(Selection selection, JmsTemplate jmsTemplate, DirectionsService directionsService) {
         this.selection = selection;
         this.jmsTemplate = jmsTemplate;
+        this.directionsService = directionsService;
     }
 
     public void setProgress(int x) {
         this.progress = x;
-        setChanged();
-        notifyObservers();    // makes the observers print null
     }
 
     public void start() {
@@ -44,29 +49,78 @@ public class TspAlgorithm extends Observable implements Algorithm {
         log.info("Algorithm started");
     }
 
-    public void run() {
+    @Override
+    public Map<Pair<LocationDto, LocationDto>, Long> prepareData(List<LocationDto> locationDtoList) {
+        setProgress(0);
+        selection.setProgress(progress);
+        selection.setState(Constants.PREPARING_STATE);
+        jmsTemplate.convertAndSend("stateUpdate", "");
 
-        List<LocationDto> locationDtoList = selection.getLocationDtos();
-        List<LocationDto> result = locationDtoList;
+        Map<Pair<LocationDto, LocationDto>, Long> distancesMap;
+
+        distancesMap = new HashMap<>();
+
+        for (int i = 0; i < locationDtoList.size(); i++) {
+
+            LocationDto locationDto = locationDtoList.get(i);
+
+            List<LocationDto> others = new ArrayList<>();
+            others.addAll(locationDtoList);
+            others.remove(locationDto);
+
+            for (LocationDto other : others) {
+
+                Long distance = directionsService.getDirection(locationDto.getPlaceName(), other.getPlaceName()).routes[0].legs[0].distance.inMeters;
+                distancesMap.put(new Pair<>(locationDto, other), distance);
+            }
+            setProgress(i * 100 / locationDtoList.size());
+            selection.setProgress(getProgress());
+            jmsTemplate.convertAndSend("stateUpdate", "");
+        }
+
+        return distancesMap;
+    }
+
+    @Override
+    public List<LocationDto> compute() {
+        setProgress(0);
+        selection.setProgress(getProgress());
+        selection.setState(Constants.COMPUTING_STATE);
+        jmsTemplate.convertAndSend("stateUpdate", "");
+
         while (progress < 100 && !stopAlgorithm) {
 
-            progress = progress + 10;
-            setChanged();
-
-            notifyObservers(progress);
+            setProgress(getProgress() + 10);
+            selection.setProgress(getProgress());
 
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) { log.error("Cannot call sleep on thread.", e); }
         }
+        selection.setResult(selection.getLocationDtos());
+        return selection.getLocationDtos();
+    }
+
+    public void run() {
+
+        List<LocationDto> locationDtoList = new ArrayList<>();
+        locationDtoList.addAll(selection.getLocationDtos());
+
+        selection.setDistancesMap(prepareData(locationDtoList));
+
+        List<LocationDto> result = compute();
 
         setProgress(100);
+        selection.setProgress(getProgress());
+        selection.setState(Constants.READY_STATE);
+        jmsTemplate.convertAndSend("stateUpdate", "");
+
         int index = 1;
         for (LocationDto locationDto : result) {
             locationDto.setIndex(index);
             index++;
         }
-        selection.setCalculatedLocationDtos(result);
+        selection.setResult(result);
         jmsTemplate.convertAndSend("algorithmResult", "");
     }
 
