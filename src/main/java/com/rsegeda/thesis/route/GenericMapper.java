@@ -5,13 +5,13 @@ import java.util.List;
 /**
  * Created by Roman Segeda on 02/07/2017.
  */
-public interface GenericMapper<DTO, Domain> {
+public interface GenericMapper<D, E> {
 
-    Domain toDomain(DTO dto);
+    E toDomain(D dto);
 
-    DTO toDto(Domain domain);
+    D toDto(E entity);
 
-    List<DTO> toDtos(List<Domain> domains);
+    List<D> toDtos(List<E> entities);
 
-    List<Domain> toDomains(List<DTO> dtos);
+    List<E> toDomains(List<D> dtos);
 }

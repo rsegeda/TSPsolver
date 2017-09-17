@@ -15,12 +15,6 @@ public class HeldKarpAlgorithm extends TspAlgorithm {
         super(selection, jmsTemplate, directionsService);
     }
 
-    //    @Override
-    //    public List<LocationDto> compute(){
-    //        log.info(""+selection.getDistancesMap().size());
-    //        return selection.getLocationDtos();
-    //    }
-
     @Override
     public void stop() {
         setStopAlgorithm(true);

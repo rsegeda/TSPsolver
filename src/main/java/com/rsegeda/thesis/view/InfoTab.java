@@ -5,13 +5,12 @@ import com.vaadin.ui.Label;
 import org.springframework.stereotype.Component;
 
 /**
- * Copyright 2017 by Avid Technology, Inc.
- * Created by roman.segeda@avid.com on 26/08/2017.
+ * Created by Roman Segeda on 26/08/2017.
  */
 @Component
 public class InfoTab extends HorizontalLayout {
 
-    public void init(){
+    void init() {
         Label infoLabel = new Label("Created by Roman Segeda");
         infoLabel.setSizeFull();
         this.addComponent(infoLabel);

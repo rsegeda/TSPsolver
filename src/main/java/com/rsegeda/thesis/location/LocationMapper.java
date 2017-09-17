@@ -9,5 +9,4 @@ import org.springframework.stereotype.Component;
 @Component
 @Mapper(componentModel = "spring")
 public interface LocationMapper extends GenericMapper<LocationDto, Location> {
-
 }

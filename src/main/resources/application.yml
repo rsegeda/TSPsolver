@@ -1,0 +1,4 @@
+pathfinder:
+  mongo:
+    uri: localhost
+    port: 27017

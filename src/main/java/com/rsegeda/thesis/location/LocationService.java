@@ -12,8 +12,10 @@ public interface LocationService {
 
     Optional<LocationDto> getLocation(Long id);
 
+    @SuppressWarnings("unused")
     Optional<LocationDto> getLocationByPlaceId(String placeId);
 
+    @SuppressWarnings("UnusedReturnValue")
     Optional<LocationDto> saveLocation(LocationDto routeDto);
 
     void deleteLocation(Long id);

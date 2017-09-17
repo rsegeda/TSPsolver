@@ -27,6 +27,6 @@ public class RouteServiceImpl implements RouteService {
 
     @Override
     public Optional<RouteDto> saveRoute(RouteDto routeDto) {
-        return null;
+        return Optional.empty();
     }
 }

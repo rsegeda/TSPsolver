@@ -20,7 +20,6 @@ public final class LocationDto {
     String placeName;
     LatLon latLon;
     Integer index;
-
 }
 
 

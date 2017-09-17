@@ -14,7 +14,11 @@
       </configuration>
     </facet>
     <facet type="Spring" name="Spring">
-      <configuration />
+      <configuration>
+        <fileset id="fileset" name="PathfinderApplication" removed="false">
+          <file>file://$MODULE_DIR$/src/main/java/com/rsegeda/thesis/PathfinderApplication.java</file>
+        </fileset>
+      </configuration>
     </facet>
   </component>
   <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_8">

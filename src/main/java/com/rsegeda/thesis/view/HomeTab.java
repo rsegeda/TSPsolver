@@ -42,14 +42,12 @@ import java.util.stream.Collectors;
 @Component
 public class HomeTab extends HorizontalLayout {
 
-    private final Selection selection;
-    private final LocationService locationService;
-    private final JmsTemplate jmsTemplate;
     /*
     Right panel
      */
     private final VerticalLayout rightPanel = new VerticalLayout();
-    private List<LocationDto> locationList;
+    private transient Selection selection;
+    private transient LocationService locationService;
     /*
     Left panel
      */
@@ -57,20 +55,21 @@ public class HomeTab extends HorizontalLayout {
     private HorizontalLayout basicSetupLayout = new HorizontalLayout();
     private List<String> algorithms = new ArrayList<>();
     private List<String> goals = new ArrayList<>();
-    private RadioButtonGroup<String> algorithmRadioButtonGroup;
-    private RadioButtonGroup<String> goalRadioButtonGroup;
     private HorizontalLayout addLocationLayout = new HorizontalLayout();
-    private List<Place.Prediction> predictions = new ArrayList<>();
-    private Place.Prediction selectedPrediction = null;
-    private List<GoogleMapMarker> googleMapMarkers = new ArrayList<>();
+    private transient JmsTemplate jmsTemplate;
+    private transient List<Place.Prediction> predictions = new ArrayList<>();
     private HorizontalLayout locationGridLayout = new HorizontalLayout();
     private Grid<LocationDto> locationGrid = new Grid<>();
     private Label addLocationLabel = new Label("New location");
     private TextField addLocationTextField = new TextField();
     private ComboBox<Place.Prediction> addLocationComboBox = new ComboBox<>();
     private Button addLocationButton = new Button();
+    private transient Place.Prediction selectedPrediction = null;
+    private transient List<LocationDto> locationList;
     private GoogleMap googleMap = new GoogleMap("AIzaSyCSoGguoU21dVqyW-k_o1fpl1_mUiSy4-Y",
             null, "english");
+    private List<GoogleMapMarker> googleMapMarkers = new ArrayList<>();
+
     private boolean created = false;
 
     @Autowired
@@ -107,21 +106,24 @@ public class HomeTab extends HorizontalLayout {
     }
 
     private void setupBasicSetupLayout() {
+        RadioButtonGroup<String> algorithmRadioButtonGroup;
         algorithmRadioButtonGroup = new RadioButtonGroup<>("Algorithm", algorithms);
         algorithmRadioButtonGroup.setSelectedItem(algorithms.get(0));
 
         algorithmRadioButtonGroup.addStyleName("algorithmOption");
         basicSetupLayout.addComponent(algorithmRadioButtonGroup);
 
-        goalRadioButtonGroup = new RadioButtonGroup<>("Goal", goals);
+        RadioButtonGroup<String> goalRadioButtonGroup = new RadioButtonGroup<>("Goal", goals);
         goalRadioButtonGroup.setSelectedItem(goals.get(0));
         basicSetupLayout.addComponent(goalRadioButtonGroup);
 
         Button runButton = new Button("Run");
         runButton.setIcon(VaadinIcons.PLAY);
 
-        runButton.addClickListener((Button.ClickListener) clickEvent ->
-                runAlgorithm(algorithmRadioButtonGroup.getSelectedItem().get()));
+        runButton.addClickListener((Button.ClickListener) clickEvent -> {
+            Optional<String> selectedItem = algorithmRadioButtonGroup.getSelectedItem();
+            selectedItem.ifPresent(this::runAlgorithm);
+        });
         basicSetupLayout.addComponent(runButton);
 
         basicSetupLayout.setSizeFull();
@@ -132,11 +134,11 @@ public class HomeTab extends HorizontalLayout {
         selection.setAlgorithmName(algorithm);
         selection.setLocationDtos(locationList);
 
-        notifyMainTabSheet("runAlgorithm", "");
+        notifyMainTabSheet();
     }
 
-    private void notifyMainTabSheet(String destination, String message) {
-        jmsTemplate.convertAndSend("runAlgorithm", message);
+    private void notifyMainTabSheet() {
+        jmsTemplate.convertAndSend("runAlgorithm", "");
     }
 
     private void setupAddLocationLayout() {
@@ -236,10 +238,12 @@ public class HomeTab extends HorizontalLayout {
 
         try {
             Places.Response<List<Place.Prediction>> autocompleteResponse = Places.autocomplete(Places.Params.create().query(String.valueOf(query)));
+
             if (autocompleteResponse.getStatus() != null && autocompleteResponse.getStatus().equals("OVER_QUERY_LIMIT")) {
                 Notification.show("Google Places Web API has reached 1k requests limit :(",
                         Notification.Type.TRAY_NOTIFICATION);
             }
+
             predictions = autocompleteResponse.getResult();
         } catch (IOException e) {
             log.error("Cannot suggest a prediction", e);
@@ -286,7 +290,7 @@ public class HomeTab extends HorizontalLayout {
 
     }
 
-    public void init() {
+    void init() {
 
         if (!created) {
 

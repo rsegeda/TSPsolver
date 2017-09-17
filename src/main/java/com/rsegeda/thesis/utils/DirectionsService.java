@@ -12,14 +12,13 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 
 /**
- * Copyright 2017 by Avid Technology, Inc.
- * Created by roman.segeda@avid.com on 02/09/2017.
+ * Created by Roman Segeda on 02/09/2017.
  */
 @Slf4j
 @Component
 public class DirectionsService {
 
-    GeoApiContext geoApiContext;
+    private GeoApiContext geoApiContext;
 
     public DirectionsService() {
         this.geoApiContext = new GeoApiContext().setApiKey("AIzaSyBmonDj8j48U0snyCoRn8SgnqMOc7t6QtA");

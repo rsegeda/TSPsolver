@@ -10,8 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Copyright 2017 by Avid Technology, Inc.
- * Created by roman.segeda@avid.com on 26/08/2017.
+ * Created by Roman Segeda on 26/08/2017.
  */
 @Data
 @Component

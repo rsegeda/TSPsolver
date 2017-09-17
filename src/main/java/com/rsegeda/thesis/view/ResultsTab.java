@@ -5,10 +5,6 @@ import com.rsegeda.thesis.algorithm.TspAlgorithm;
 import com.rsegeda.thesis.component.Selection;
 import com.rsegeda.thesis.config.Constants;
 import com.rsegeda.thesis.location.LocationDto;
-import com.rsegeda.thesis.location.LocationMapper;
-import com.rsegeda.thesis.location.LocationService;
-import com.rsegeda.thesis.route.RouteMapper;
-import com.rsegeda.thesis.route.RouteService;
 import com.rsegeda.thesis.utils.DirectionsService;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.HorizontalLayout;
@@ -33,38 +29,36 @@ import static com.rsegeda.thesis.config.Constants.THE_HELD_KARP_LOWER_BOUND;
 @Component
 public class ResultsTab extends VerticalLayout {
 
-    private final Selection selection;
-    private final JmsTemplate jmsTemplate;
-    private final DirectionsService directionsService;
+    private transient Selection selection;
+    private transient JmsTemplate jmsTemplate;
+    private transient DirectionsService directionsService;
 
-    private final LocationService locationService;
-    private final RouteService routeService;
-
-    private final LocationMapper locationMapper;
-    private final RouteMapper routeMapper;
-    private TspAlgorithm tspAlgorithm;
-    private List<LocationDto> locationList;
+    private transient TspAlgorithm tspAlgorithm;
+    private transient List<LocationDto> locationList;
     private String selectedAlgorithm = "";
     private Label selectedAlgorithmLabel;
     private Label progressLabel;
+
+    @SuppressWarnings("FieldCanBeLocal")
+    private HorizontalLayout infoPanel;
+
+    private HorizontalLayout resultsPanel;
+    private VerticalLayout leftPanel;
+    private VerticalLayout rightPanel;
 
     private Grid<LocationDto> locationGrid;
     private boolean created = false;
 
     @Autowired
-    public ResultsTab(LocationService locationService, RouteService routeService, LocationMapper locationMapper,
-                      RouteMapper routeMapper, Selection selection, JmsTemplate jmsTemplate, DirectionsService directionsService) {
+    public ResultsTab(Selection selection, JmsTemplate jmsTemplate,
+                      DirectionsService directionsService) {
 
-        this.locationService = locationService;
-        this.routeService = routeService;
-        this.locationMapper = locationMapper;
-        this.routeMapper = routeMapper;
         this.selection = selection;
         this.jmsTemplate = jmsTemplate;
         this.directionsService = directionsService;
     }
 
-    public void run() {
+    void run() {
         clearOldResults();
         selectedAlgorithm = selection.getAlgorithmName();
         selectedAlgorithmLabel.setValue("Algorithm: " + selectedAlgorithm);
@@ -105,41 +99,56 @@ public class ResultsTab extends VerticalLayout {
         progressLabel = new Label();
 
         addComponent(progressLabel);
-
     }
 
 
-    public void init() {
+    void init() {
 
         if (!created) {
             this.locationList = new ArrayList<>();
 
             selectedAlgorithmLabel = new Label("");
 
-            HorizontalLayout infoPanel = new HorizontalLayout();
+            infoPanel = new HorizontalLayout();
             infoPanel.addComponent(selectedAlgorithmLabel);
             addComponent(infoPanel);
-            HorizontalLayout resultsPanel = new HorizontalLayout();
 
-            locationGrid = new Grid<>();
-
-            locationGrid.setSizeFull();
-            locationGrid.addStyleName("locationGrid");
-            locationGrid.addColumn(LocationDto::getIndex).setCaption("Order").setExpandRatio(2);
-            locationGrid.addColumn(LocationDto::getPlaceName).setCaption("Name").setExpandRatio(98);
-
-            // Allow column hiding
-            locationGrid.getColumns().forEach(column -> column.setHidable(true));
-            locationGrid.setId("resultsGrid");
-            locationGrid.setStyleName("resultsGrid");
-            resultsPanel.setSizeFull();
-            resultsPanel.addComponent(locationGrid);
-            resultsPanel.addComponent(new Label("Other data"));
+            setupResultsPanel();
             addComponent(resultsPanel);
 
             created = true;
         }
+    }
 
+    private void setupResultsPanel() {
+        resultsPanel = new HorizontalLayout();
+        resultsPanel.setStyleName("resultsTabPanel");
+        setupLeftPanel();
+        setupRightPanel();
+        resultsPanel.addComponents(leftPanel, rightPanel);
+    }
+
+    private void setupLeftPanel() {
+        leftPanel = new VerticalLayout();
+        locationGrid = new Grid<>();
+
+        locationGrid.setSizeFull();
+        locationGrid.addStyleName("locationGrid");
+        locationGrid.addColumn(LocationDto::getIndex).setCaption("Order").setExpandRatio(2);
+        locationGrid.addColumn(LocationDto::getPlaceName).setCaption("Name").setExpandRatio(98);
+
+        // Allow column hiding
+        locationGrid.getColumns().forEach(column -> column.setHidable(true));
+        locationGrid.setId("resultsGrid");
+        locationGrid.setStyleName("resultsGrid");
+        resultsPanel.setSizeFull();
+        leftPanel.setSizeFull();
+        leftPanel.addStyleName("ResultsLeftPanel");
+        leftPanel.addComponent(locationGrid);
+    }
+
+    private void setupRightPanel() {
+        rightPanel = new VerticalLayout();
     }
 
     @JmsListener(destination = "algorithmResult", containerFactory = "jmsListenerFactory")

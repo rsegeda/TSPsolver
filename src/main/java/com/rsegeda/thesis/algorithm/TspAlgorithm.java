@@ -16,21 +16,21 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Copyright 2017 by Avid Technology, Inc.
- * Created by roman.segeda@avid.com on 25/08/2017.
+ * Created by Roman Segeda on 25/08/2017.
  */
 @Slf4j
 public class TspAlgorithm implements Algorithm {
 
-    public final Selection selection;
-    public final JmsTemplate jmsTemplate;
-    public final DirectionsService directionsService;
+    private final Selection selection;
+    private final JmsTemplate jmsTemplate;
+    private final DirectionsService directionsService;
     @Getter
     public Thread thread;
     @Getter
     public int progress = 0;
-    public boolean stopAlgorithm = false;
+    boolean stopAlgorithm = false;
 
+    @SuppressWarnings("SpringJavaAutowiredMembersInspection")
     @Autowired
     public TspAlgorithm(Selection selection, JmsTemplate jmsTemplate, DirectionsService directionsService) {
         this.selection = selection;
@@ -54,7 +54,7 @@ public class TspAlgorithm implements Algorithm {
         setProgress(0);
         selection.setProgress(progress);
         selection.setState(Constants.PREPARING_STATE);
-        jmsTemplate.convertAndSend("stateUpdate", "");
+        jmsTemplate.convertAndSend(Constants.STATE_UPDATE_JMS, "");
 
         Map<Pair<LocationDto, LocationDto>, Long> distancesMap;
 
@@ -70,12 +70,14 @@ public class TspAlgorithm implements Algorithm {
 
             for (LocationDto other : others) {
 
-                Long distance = directionsService.getDirection(locationDto.getPlaceName(), other.getPlaceName()).routes[0].legs[0].distance.inMeters;
+                Long distance = directionsService.getDirection(locationDto.getPlaceName(),
+                        other.getPlaceName()).routes[0].legs[0].distance.inMeters;
                 distancesMap.put(new Pair<>(locationDto, other), distance);
             }
+
             setProgress(i * 100 / locationDtoList.size());
             selection.setProgress(getProgress());
-            jmsTemplate.convertAndSend("stateUpdate", "");
+            jmsTemplate.convertAndSend(Constants.STATE_UPDATE_JMS, "");
         }
 
         return distancesMap;
@@ -86,7 +88,7 @@ public class TspAlgorithm implements Algorithm {
         setProgress(0);
         selection.setProgress(getProgress());
         selection.setState(Constants.COMPUTING_STATE);
-        jmsTemplate.convertAndSend("stateUpdate", "");
+        jmsTemplate.convertAndSend(Constants.STATE_UPDATE_JMS, "");
 
         while (progress < 100 && !stopAlgorithm) {
 
@@ -95,8 +97,12 @@ public class TspAlgorithm implements Algorithm {
 
             try {
                 Thread.sleep(100);
-            } catch (InterruptedException e) { log.error("Cannot call sleep on thread.", e); }
+            } catch (InterruptedException e) {
+                log.error("Cannot call sleep on thread.", e);
+                Thread.currentThread().interrupt();
+            }
         }
+
         selection.setResult(selection.getLocationDtos());
         return selection.getLocationDtos();
     }
@@ -113,13 +119,14 @@ public class TspAlgorithm implements Algorithm {
         setProgress(100);
         selection.setProgress(getProgress());
         selection.setState(Constants.READY_STATE);
-        jmsTemplate.convertAndSend("stateUpdate", "");
+        jmsTemplate.convertAndSend(Constants.STATE_UPDATE_JMS, "");
 
         int index = 1;
         for (LocationDto locationDto : result) {
             locationDto.setIndex(index);
             index++;
         }
+
         selection.setResult(result);
         jmsTemplate.convertAndSend("algorithmResult", "");
     }

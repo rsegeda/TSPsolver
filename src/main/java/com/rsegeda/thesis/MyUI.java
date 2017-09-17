@@ -1,15 +1,7 @@
 package com.rsegeda.thesis;
 
-import com.rsegeda.thesis.component.Selection;
-import com.rsegeda.thesis.location.LocationMapper;
-import com.rsegeda.thesis.location.LocationService;
-import com.rsegeda.thesis.route.RouteMapper;
-import com.rsegeda.thesis.route.RouteService;
-import com.rsegeda.thesis.view.HomeTab;
-import com.rsegeda.thesis.view.InfoTab;
+import com.rsegeda.thesis.config.Constants;
 import com.rsegeda.thesis.view.MainTabSheet;
-import com.rsegeda.thesis.view.ResultsTab;
-import com.rsegeda.thesis.view.SettingsTab;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.VaadinServletConfiguration;
 import com.vaadin.event.UIEvents;
@@ -18,7 +10,6 @@ import com.vaadin.server.VaadinServlet;
 import com.vaadin.spring.annotation.SpringUI;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.UI;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,40 +28,12 @@ import javax.servlet.annotation.WebServlet;
 @SpringUI
 public class MyUI extends UI {
 
-    private final LocationService locationService;
-    private final RouteService routeService;
-    private final LocationMapper locationMapper;
-    private final RouteMapper routeMapper;
-    private Label appNameLabel;
     private CssLayout mainLayout;
-
-    private TabSheet tabSheet;
-
     private final MainTabSheet mainTabSheet;
-    private final Selection selection;
-
-    private final HomeTab homeTab;
-    private final ResultsTab resultsTab;
-    private final SettingsTab settingsTab;
-    private final InfoTab infoTab;
 
     @Autowired
-    public MyUI(LocationService locationService, RouteService routeService, LocationMapper locationMapper,
-                RouteMapper routeMapper, Selection selection, MainTabSheet mainTabSheet, HomeTab homeTab, ResultsTab resultsTab,
-                SettingsTab settingsTab, InfoTab infoTab) {
-        this.locationService = locationService;
-        this.routeService = routeService;
-        this.locationMapper = locationMapper;
-        this.routeMapper = routeMapper;
-
-        this.selection = selection;
-
+    public MyUI(MainTabSheet mainTabSheet) {
         this.mainTabSheet = mainTabSheet;
-
-        this.homeTab = homeTab;
-        this.resultsTab = resultsTab;
-        this.settingsTab = settingsTab;
-        this.infoTab = infoTab;
     }
 
     @Override
@@ -88,7 +51,7 @@ public class MyUI extends UI {
         mainLayout = new CssLayout();
         mainLayout.setStyleName("homeMainLayout");
 
-        appNameLabel = new Label("Pathfinder - TSP solver");
+        Label appNameLabel = new Label(Constants.APP_NAME);
         appNameLabel.setStyleName("appLabel");
         appNameLabel.setHeight(8.0f, Unit.PERCENTAGE);
         mainLayout.addComponent(appNameLabel);

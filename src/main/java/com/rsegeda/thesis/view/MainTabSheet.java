@@ -7,8 +7,7 @@ import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Component;
 
 /**
- * Copyright 2017 by Avid Technology, Inc.
- * Created by roman.segeda@avid.com on 27/08/2017.
+ * Created by Roman Segeda on 27/08/2017.
  */
 @Slf4j
 @Component
