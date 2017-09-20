@@ -4,8 +4,12 @@ import com.rsegeda.thesis.algorithm.HeldKarpAlgorithm;
 import com.rsegeda.thesis.algorithm.TspAlgorithm;
 import com.rsegeda.thesis.component.Selection;
 import com.rsegeda.thesis.config.Constants;
+import com.rsegeda.thesis.config.Properties;
 import com.rsegeda.thesis.location.LocationDto;
 import com.rsegeda.thesis.utils.DirectionsService;
+import com.vaadin.tapio.googlemaps.GoogleMap;
+import com.vaadin.tapio.googlemaps.client.LatLon;
+import com.vaadin.tapio.googlemaps.client.overlays.GoogleMapMarker;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -27,8 +31,9 @@ import static com.rsegeda.thesis.config.Constants.THE_HELD_KARP_LOWER_BOUND;
  */
 @Slf4j
 @Component
-public class ResultsTab extends VerticalLayout {
+public class ResultsTab extends HorizontalLayout {
 
+    private Properties properties;
     private transient Selection selection;
     private transient JmsTemplate jmsTemplate;
     private transient DirectionsService directionsService;
@@ -42,17 +47,22 @@ public class ResultsTab extends VerticalLayout {
     @SuppressWarnings("FieldCanBeLocal")
     private HorizontalLayout infoPanel;
 
-    private HorizontalLayout resultsPanel;
     private VerticalLayout leftPanel;
+
+    /*
+    Right panel
+     */
     private VerticalLayout rightPanel;
+    private GoogleMap googleMap;
+    private List<GoogleMapMarker> googleMapMarkers = new ArrayList<>();
 
     private Grid<LocationDto> locationGrid;
     private boolean created = false;
 
     @Autowired
-    public ResultsTab(Selection selection, JmsTemplate jmsTemplate,
+    public ResultsTab(Properties properties, Selection selection, JmsTemplate jmsTemplate,
                       DirectionsService directionsService) {
-
+        this.properties = properties;
         this.selection = selection;
         this.jmsTemplate = jmsTemplate;
         this.directionsService = directionsService;
@@ -97,39 +107,43 @@ public class ResultsTab extends VerticalLayout {
             return;
         }
         progressLabel = new Label();
-
-        addComponent(progressLabel);
+        progressLabel.setStyleName("resultsProgressLabel");
+        leftPanel.addComponent(progressLabel);
     }
 
 
     void init() {
-
         if (!created) {
+            googleMap = new GoogleMap(properties.getApiKey(),
+                    null, "english");
+
             this.locationList = new ArrayList<>();
 
-            selectedAlgorithmLabel = new Label("");
-
-            infoPanel = new HorizontalLayout();
-            infoPanel.addComponent(selectedAlgorithmLabel);
-            addComponent(infoPanel);
-
             setupResultsPanel();
-            addComponent(resultsPanel);
+            setSizeFull();
 
             created = true;
         }
     }
 
     private void setupResultsPanel() {
-        resultsPanel = new HorizontalLayout();
-        resultsPanel.setStyleName("resultsTabPanel");
+        setSizeFull();
+        setStyleName("resultsTabPanel");
         setupLeftPanel();
         setupRightPanel();
-        resultsPanel.addComponents(leftPanel, rightPanel);
+        addComponents(leftPanel, rightPanel);
     }
 
     private void setupLeftPanel() {
         leftPanel = new VerticalLayout();
+
+        selectedAlgorithmLabel = new Label("");
+
+        infoPanel = new HorizontalLayout();
+        infoPanel.addComponent(selectedAlgorithmLabel);
+        infoPanel.setStyleName("resultsInfoPanel");
+        leftPanel.addComponent(infoPanel);
+
         locationGrid = new Grid<>();
 
         locationGrid.setSizeFull();
@@ -141,14 +155,24 @@ public class ResultsTab extends VerticalLayout {
         locationGrid.getColumns().forEach(column -> column.setHidable(true));
         locationGrid.setId("resultsGrid");
         locationGrid.setStyleName("resultsGrid");
-        resultsPanel.setSizeFull();
         leftPanel.setSizeFull();
-        leftPanel.addStyleName("ResultsLeftPanel");
+        leftPanel.addStyleName("resultsLeftPanel");
         leftPanel.addComponent(locationGrid);
     }
 
     private void setupRightPanel() {
         rightPanel = new VerticalLayout();
+        rightPanel.setSizeFull();
+        rightPanel.addStyleName("resultsRightPanel");
+
+        googleMap.setCenter(new LatLon(52.0690115, 19.4790478));
+        googleMap.setZoom(6);
+        googleMap.setMinZoom(4);
+        googleMap.setMaxZoom(16);
+        googleMap.setWidth(100.0f, Unit.PERCENTAGE);
+        googleMap.setHeight(95.0f, Unit.PERCENTAGE);
+        googleMap.setVisible(true);
+        rightPanel.addComponent(googleMap);
     }
 
     @JmsListener(destination = "algorithmResult", containerFactory = "jmsListenerFactory")
@@ -160,11 +184,31 @@ public class ResultsTab extends VerticalLayout {
     @JmsListener(destination = "stateUpdate", containerFactory = "jmsListenerFactory")
     public void updateInfo() {
 
-        if (selection.getState().equals(Constants.PREPARING_STATE)) {
-            progressLabel.setValue("Current state is: " + selection.getState() + ": " + selection.getProgress() + "%");
-            log.warn("Progress is: " + selection.getProgress());
-        } else {
-            progressLabel.setValue("Current state is: " + selection.getState());
+        switch (selection.getState()) {
+            case Constants.PREPARING_STATE:
+                progressLabel.setValue("Current state is: "
+                        + selection.getState() + ": " + selection.getProgress() + "%");
+                log.warn("Progress is: " + selection.getProgress());
+                break;
+            case Constants.READY_STATE:
+                pinMarkers();
+                break;
+            default:
+                progressLabel.setValue("Current state is: " + selection.getState());
+                break;
         }
+    }
+
+    private void pinMarkers() {
+
+        selection.getResult().forEach(locationDto -> createMarker(locationDto.getPlaceName(), locationDto.getLatLon()));
+    }
+
+    private void createMarker(String name, LatLon latLon) {
+
+        GoogleMapMarker newMarker = new GoogleMapMarker(name,
+                new LatLon(latLon.getLat(), latLon.getLon()), false, null);
+        googleMapMarkers.add(newMarker);
+        googleMap.addMarker(newMarker);
     }
 }

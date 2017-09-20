@@ -65,6 +65,7 @@
 .v-horizontallayout-locationGridLayout {
   width: 100% !important;
 }
+
 .v-slot-locationGrid {
   width: 80% !important;
 }
@@ -73,6 +74,14 @@
   width: 40% !important;
 }
 
-.v-horizontallayout-resultsTabPanel {
-  margin-top: -2% !important;
+.v-slot-resultsInfoPanel {
+  height: 5% !important;
+}
+
+.v-slot-resultsGrid {
+  height: 90% !important;
+}
+
+.v-slot-resultsProgressLabel {
+  height: 5% !important;
 }

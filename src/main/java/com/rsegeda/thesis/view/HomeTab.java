@@ -2,6 +2,7 @@ package com.rsegeda.thesis.view;
 
 import com.rsegeda.thesis.component.Selection;
 import com.rsegeda.thesis.config.Constants;
+import com.rsegeda.thesis.config.Properties;
 import com.rsegeda.thesis.location.LocationDto;
 import com.rsegeda.thesis.location.LocationService;
 import com.vaadin.icons.VaadinIcons;
@@ -42,41 +43,44 @@ import java.util.stream.Collectors;
 @Component
 public class HomeTab extends HorizontalLayout {
 
+    private final Properties properties;
+    private transient Selection selection;
+    private transient LocationService locationService;
     /*
     Right panel
      */
     private final VerticalLayout rightPanel = new VerticalLayout();
-    private transient Selection selection;
-    private transient LocationService locationService;
+    private transient JmsTemplate jmsTemplate;
+    private GoogleMap googleMap;
+    private List<GoogleMapMarker> googleMapMarkers = new ArrayList<>();
     /*
     Left panel
      */
+    private transient Place.Prediction selectedPrediction = null;
+    private transient List<LocationDto> locationList;
+    private transient List<Place.Prediction> predictions = new ArrayList<>();
+
     private VerticalLayout leftPanel = new VerticalLayout();
     private HorizontalLayout basicSetupLayout = new HorizontalLayout();
     private List<String> algorithms = new ArrayList<>();
     private List<String> goals = new ArrayList<>();
     private HorizontalLayout addLocationLayout = new HorizontalLayout();
-    private transient JmsTemplate jmsTemplate;
-    private transient List<Place.Prediction> predictions = new ArrayList<>();
     private HorizontalLayout locationGridLayout = new HorizontalLayout();
     private Grid<LocationDto> locationGrid = new Grid<>();
     private Label addLocationLabel = new Label("New location");
     private TextField addLocationTextField = new TextField();
     private ComboBox<Place.Prediction> addLocationComboBox = new ComboBox<>();
     private Button addLocationButton = new Button();
-    private transient Place.Prediction selectedPrediction = null;
-    private transient List<LocationDto> locationList;
-    private GoogleMap googleMap = new GoogleMap("AIzaSyCSoGguoU21dVqyW-k_o1fpl1_mUiSy4-Y",
-            null, "english");
-    private List<GoogleMapMarker> googleMapMarkers = new ArrayList<>();
 
     private boolean created = false;
 
     @Autowired
-    public HomeTab(Selection selection, LocationService locationService, JmsTemplate jmsTemplate) {
+    public HomeTab(Selection selection, LocationService locationService, JmsTemplate jmsTemplate,
+                   Properties properties) {
         this.selection = selection;
         this.locationService = locationService;
         this.jmsTemplate = jmsTemplate;
+        this.properties = properties;
     }
 
     private void setupRightPanel() {
@@ -154,8 +158,10 @@ public class HomeTab extends HorizontalLayout {
         placesExtension.setSuggestionGenerator(this::suggestPrediction);
         placesExtension.setSuggestionDelay(500);
 
-        placesExtension.addSuggestionSelectListener(event -> event.getSelectedItem().ifPresent(selected -> predictions.stream()
-                .filter(prediction -> prediction.getDescription() != null && prediction.getDescription().equalsIgnoreCase(selected))
+        placesExtension.addSuggestionSelectListener(event -> event.getSelectedItem()
+                .ifPresent(selected -> predictions.stream()
+                        .filter(prediction -> prediction.getDescription() != null
+                                && prediction.getDescription().equalsIgnoreCase(selected))
                 .findFirst().ifPresent(prediction -> selectedPrediction = prediction)));
 
         addLocationButton.setIcon(VaadinIcons.PLUS);
@@ -167,9 +173,11 @@ public class HomeTab extends HorizontalLayout {
                 if (selectedPrediction.getPlaceId() == null) {
                     return;
                 }
-                Places.Response<Place> searchPlaceResponse = Places.details(Places.Params.create().placeId(selectedPrediction.getPlaceId().getId()));
+                Places.Response<Place> searchPlaceResponse =
+                        Places.details(Places.Params.create().placeId(selectedPrediction.getPlaceId().getId()));
 
-                if (searchPlaceResponse.getStatus() != null && searchPlaceResponse.getStatus().equals("OVER_QUERY_LIMIT")) {
+                if (searchPlaceResponse.getStatus() != null
+                        && searchPlaceResponse.getStatus().equals("OVER_QUERY_LIMIT")) {
                     Notification.show("Google Places Web API has reached 1k requests limit :(",
                             Notification.Type.TRAY_NOTIFICATION);
                     return;
@@ -220,7 +228,8 @@ public class HomeTab extends HorizontalLayout {
 
     private void createMarker(String name, LatLon latLon) {
 
-        GoogleMapMarker newMarker = new GoogleMapMarker(name, new LatLon(latLon.getLat(), latLon.getLon()), false, null);
+        GoogleMapMarker newMarker = new GoogleMapMarker(name,
+                new LatLon(latLon.getLat(), latLon.getLon()), false, null);
         googleMapMarkers.add(newMarker);
         googleMap.addMarker(newMarker);
     }
@@ -237,9 +246,12 @@ public class HomeTab extends HorizontalLayout {
     private List<String> suggestPrediction(String query, int cap) {
 
         try {
-            Places.Response<List<Place.Prediction>> autocompleteResponse = Places.autocomplete(Places.Params.create().query(String.valueOf(query)));
+            Places.Response<List<Place.Prediction>> autocompleteResponse =
+                    Places.autocomplete(Places.Params.create().query(String.valueOf(query)));
 
-            if (autocompleteResponse.getStatus() != null && autocompleteResponse.getStatus().equals("OVER_QUERY_LIMIT")) {
+            if (autocompleteResponse.getStatus() != null
+                    && autocompleteResponse.getStatus().equals("OVER_QUERY_LIMIT")) {
+
                 Notification.show("Google Places Web API has reached 1k requests limit :(",
                         Notification.Type.TRAY_NOTIFICATION);
             }
@@ -272,7 +284,9 @@ public class HomeTab extends HorizontalLayout {
                     locationDtoOptional.ifPresent(locationDto -> locationService.deleteLocation(locationDto.getId()));
                     locationGrid.setItems(locationList);
                     Optional<GoogleMapMarker> markerToRemove = googleMapMarkers.stream()
-                            .filter(googleMapMarker -> selectedLocation.getPlaceName() != null && selectedLocation.getPlaceName().equalsIgnoreCase(googleMapMarker.getCaption())).findAny();
+                            .filter(googleMapMarker -> selectedLocation.getPlaceName() != null
+                                    && selectedLocation.getPlaceName().equalsIgnoreCase(googleMapMarker.getCaption()))
+                            .findAny();
                     markerToRemove.ifPresent(googleMapMarker -> googleMap.removeMarker(googleMapMarker));
 
                     if (locationList.isEmpty()) {
@@ -293,6 +307,8 @@ public class HomeTab extends HorizontalLayout {
     void init() {
 
         if (!created) {
+            googleMap = new GoogleMap(properties.getApiKey(),
+                    null, "english");
 
             locationList = new ArrayList<>();
             algorithms.addAll(Constants.ALGORITHMS);

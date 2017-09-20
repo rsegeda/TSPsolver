@@ -112,7 +112,7 @@ public class TspAlgorithm implements Algorithm {
         List<LocationDto> locationDtoList = new ArrayList<>();
         locationDtoList.addAll(selection.getLocationDtos());
 
-        selection.setDistancesMap(prepareData(locationDtoList));
+        //        selection.setDistancesMap(prepareData(locationDtoList));
 
         List<LocationDto> result = compute();
 
