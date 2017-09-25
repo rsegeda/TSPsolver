@@ -6,6 +6,7 @@ import com.rsegeda.thesis.config.Properties;
 import com.rsegeda.thesis.location.LocationDto;
 import com.rsegeda.thesis.location.LocationService;
 import com.vaadin.icons.VaadinIcons;
+import com.vaadin.server.Page;
 import com.vaadin.server.ThemeResource;
 import com.vaadin.tapio.googlemaps.GoogleMap;
 import com.vaadin.tapio.googlemaps.client.LatLon;
@@ -43,7 +44,7 @@ import java.util.stream.Collectors;
 @Component
 public class HomeTab extends HorizontalLayout {
 
-    private final Properties properties;
+    private final transient Properties properties;
     private transient Selection selection;
     private transient LocationService locationService;
     /*
@@ -135,8 +136,16 @@ public class HomeTab extends HorizontalLayout {
 
     private void runAlgorithm(String algorithm) {
 
+        if (locationList.size() < 2) {
+            new Notification("Pathfinder needs more than 1 location to work",
+                    "You have chosen 1 or less places to visit",
+                    Notification.Type.WARNING_MESSAGE, true)
+                    .show(Page.getCurrent());
+            return;
+        }
         selection.setAlgorithmName(algorithm);
-        selection.setLocationDtos(locationList);
+        selection.setLocationDtos(new ArrayList<>());
+        locationList.forEach(locationDto -> selection.getLocationDtos().add(locationDto));
 
         notifyMainTabSheet();
     }
@@ -162,7 +171,7 @@ public class HomeTab extends HorizontalLayout {
                 .ifPresent(selected -> predictions.stream()
                         .filter(prediction -> prediction.getDescription() != null
                                 && prediction.getDescription().equalsIgnoreCase(selected))
-                .findFirst().ifPresent(prediction -> selectedPrediction = prediction)));
+                        .findFirst().ifPresent(prediction -> selectedPrediction = prediction)));
 
         addLocationButton.setIcon(VaadinIcons.PLUS);
         addLocationButton.addClickListener((Button.ClickListener) clickEvent -> {
@@ -295,13 +304,11 @@ public class HomeTab extends HorizontalLayout {
 
                 })).setCaption("Delete");
 
-
         // Allow column reordering
         locationGrid.setColumnReorderingAllowed(true);
 
         // Allow column hiding
         locationGrid.getColumns().forEach(column -> column.setHidable(true));
-
     }
 
     void init() {

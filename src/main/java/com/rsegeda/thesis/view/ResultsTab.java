@@ -10,6 +10,7 @@ import com.rsegeda.thesis.utils.DirectionsService;
 import com.vaadin.tapio.googlemaps.GoogleMap;
 import com.vaadin.tapio.googlemaps.client.LatLon;
 import com.vaadin.tapio.googlemaps.client.overlays.GoogleMapMarker;
+import com.vaadin.tapio.googlemaps.client.overlays.GoogleMapPolyline;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -21,6 +22,7 @@ import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -33,7 +35,7 @@ import static com.rsegeda.thesis.config.Constants.THE_HELD_KARP_LOWER_BOUND;
 @Component
 public class ResultsTab extends HorizontalLayout {
 
-    private Properties properties;
+    private final transient Properties properties;
     private transient Selection selection;
     private transient JmsTemplate jmsTemplate;
     private transient DirectionsService directionsService;
@@ -43,11 +45,13 @@ public class ResultsTab extends HorizontalLayout {
     private String selectedAlgorithm = "";
     private Label selectedAlgorithmLabel;
     private Label progressLabel;
+    private Label distanceLabel;
 
     @SuppressWarnings("FieldCanBeLocal")
     private HorizontalLayout infoPanel;
 
     private VerticalLayout leftPanel;
+    private HorizontalLayout progressPanel;
 
     /*
     Right panel
@@ -55,6 +59,7 @@ public class ResultsTab extends HorizontalLayout {
     private VerticalLayout rightPanel;
     private GoogleMap googleMap;
     private List<GoogleMapMarker> googleMapMarkers = new ArrayList<>();
+    private List<GoogleMapPolyline> polylines = new ArrayList<>();
 
     private Grid<LocationDto> locationGrid;
     private boolean created = false;
@@ -84,13 +89,11 @@ public class ResultsTab extends HorizontalLayout {
 
     private void clearOldResults() {
         locationGrid.setItems(Collections.emptyList());
+        googleMap.clearMarkers();
+        polylines.forEach(googleMapPolyline -> googleMap.removePolyline(googleMapPolyline));
     }
 
     private void setupObservers() {
-
-        if (progressLabel != null && progressLabel.isAttached()) {
-            removeComponent(progressLabel);
-        }
 
         switch (selectedAlgorithm) {
 
@@ -106,9 +109,19 @@ public class ResultsTab extends HorizontalLayout {
         if (tspAlgorithm == null) {
             return;
         }
-        progressLabel = new Label();
+
+        if (progressLabel != null && progressLabel.isAttached()) {
+            progressPanel.removeComponent(progressLabel);
+            progressPanel.removeComponent(distanceLabel);
+        } else if (progressLabel == null) {
+            progressLabel = new Label();
+        }
+
         progressLabel.setStyleName("resultsProgressLabel");
-        leftPanel.addComponent(progressLabel);
+
+        if (!progressLabel.isAttached()) {
+            progressPanel.addComponent(progressLabel);
+        }
     }
 
 
@@ -149,15 +162,23 @@ public class ResultsTab extends HorizontalLayout {
         locationGrid.setSizeFull();
         locationGrid.addStyleName("locationGrid");
         locationGrid.addColumn(LocationDto::getIndex).setCaption("Order").setExpandRatio(2);
-        locationGrid.addColumn(LocationDto::getPlaceName).setCaption("Name").setExpandRatio(98);
+        locationGrid.addColumn(LocationDto::getPlaceName).setCaption("Name").setExpandRatio(78);
+
+        //TODO change to HTML renderer and add font icons etc.
+        locationGrid.addColumn(locationDto -> selection.getDistanceStagesMap()
+                .get(locationDto.getId()) / 1000 + "km").setCaption("Stage").setExpandRatio(20);
 
         // Allow column hiding
         locationGrid.getColumns().forEach(column -> column.setHidable(true));
         locationGrid.setId("resultsGrid");
         locationGrid.setStyleName("resultsGrid");
+
         leftPanel.setSizeFull();
         leftPanel.addStyleName("resultsLeftPanel");
         leftPanel.addComponent(locationGrid);
+
+        progressPanel = new HorizontalLayout();
+        leftPanel.addComponent(progressPanel);
     }
 
     private void setupRightPanel() {
@@ -176,38 +197,65 @@ public class ResultsTab extends HorizontalLayout {
     }
 
     @JmsListener(destination = "algorithmResult", containerFactory = "jmsListenerFactory")
-    public void startAlgorithm() {
-        locationList = selection.getResult();
+    public void showResults() {
+
+        locationList = selection.getResultList();
         locationGrid.setItems(locationList);
+        pinMarkers();
+        drawLines();
+
+        distanceLabel = new Label("Calculated Distance: " + selection.getResultDistance() / 1000 + "km");
+        progressPanel.addComponent(distanceLabel);
+    }
+
+    private void drawLines() {
+        List<LocationDto> locationDtos = selection.getResultList();
+
+        for (int i = 0; i < locationDtos.size(); i++) {
+            if (i == locationDtos.size() - 1) {
+                GoogleMapPolyline polyline = new GoogleMapPolyline(
+                        Arrays.asList(locationDtos.get(0).getLatLon(), locationDtos.get(i).getLatLon()),
+                        String.format("#%02x%02x%02x", 254,
+                                i * 255 / locationDtos.size(),
+                                i * 255 / locationDtos.size()),
+                        0.8, 5);
+                polylines.add(polyline);
+                googleMap.addPolyline(polyline);
+            } else {
+                GoogleMapPolyline polyline = new GoogleMapPolyline(
+                        Arrays.asList(locationDtos.get(i).getLatLon(), locationDtos.get(i + 1).getLatLon()),
+                        String.format("#%02x%02x%02x",
+                                254, i * 255 / locationDtos.size(),
+                                i * 255 / locationDtos.size()),
+                        0.8, 5);
+                polylines.add(polyline);
+                googleMap.addPolyline(polyline);
+            }
+        }
     }
 
     @JmsListener(destination = "stateUpdate", containerFactory = "jmsListenerFactory")
     public void updateInfo() {
 
-        switch (selection.getState()) {
-            case Constants.PREPARING_STATE:
-                progressLabel.setValue("Current state is: "
-                        + selection.getState() + ": " + selection.getProgress() + "%");
-                log.warn("Progress is: " + selection.getProgress());
-                break;
-            case Constants.READY_STATE:
-                pinMarkers();
-                break;
-            default:
-                progressLabel.setValue("Current state is: " + selection.getState());
-                break;
+        progressLabel.setValue("Current state is: " + selection.getState());
+
+        if (selection.getState().equals(Constants.PREPARING_STATE)) {
+            progressLabel.setValue("Current state is: "
+                    + selection.getState() + ": " + selection.getProgress() + "%");
+            log.warn("Progress is: " + selection.getProgress());
+
         }
     }
 
     private void pinMarkers() {
-
-        selection.getResult().forEach(locationDto -> createMarker(locationDto.getPlaceName(), locationDto.getLatLon()));
+        selection.getResultList().forEach(locationDto -> createMarker(locationDto.getPlaceName(), locationDto.getLatLon()));
     }
 
     private void createMarker(String name, LatLon latLon) {
 
         GoogleMapMarker newMarker = new GoogleMapMarker(name,
                 new LatLon(latLon.getLat(), latLon.getLon()), false, null);
+        newMarker.setIconUrl("VAADIN/themes/mytheme/img/pin.png");
         googleMapMarkers.add(newMarker);
         googleMap.addMarker(newMarker);
     }

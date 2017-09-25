@@ -2,7 +2,6 @@ package com.rsegeda.thesis.component;
 
 import com.rsegeda.thesis.config.Constants;
 import com.rsegeda.thesis.location.LocationDto;
-import javafx.util.Pair;
 import lombok.Data;
 import org.springframework.stereotype.Component;
 
@@ -23,8 +22,12 @@ public class Selection {
 
     private List<LocationDto> locationDtos;
 
-    private List<LocationDto> result;
+    private List<LocationDto> resultList;
 
-    private Map<Pair<LocationDto, LocationDto>, Long> distancesMap;
+    private Map<Long, Map<Long, Long>> distancesMap;
+
+    private Long resultDistance;
+
+    private Map<Long, Long> distanceStagesMap;
 
 }

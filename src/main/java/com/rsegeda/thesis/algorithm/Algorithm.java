@@ -1,7 +1,6 @@
 package com.rsegeda.thesis.algorithm;
 
 import com.rsegeda.thesis.location.LocationDto;
-import javafx.util.Pair;
 
 import java.util.List;
 import java.util.Map;
@@ -17,7 +16,7 @@ public interface Algorithm extends Runnable{
 
     void start();
 
-    Map<Pair<LocationDto, LocationDto>, Long> prepareData(List<LocationDto> locationDtoList);
+    Map<Long, Map<Long, Long>> prepareData(List<LocationDto> locationDtoList);
 
     List<LocationDto> compute();
 
