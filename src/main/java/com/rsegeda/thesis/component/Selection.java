@@ -26,8 +26,15 @@ public class Selection {
 
     private Map<Long, Map<Long, Long>> distancesMap;
 
-    private Long resultDistance;
+    private Integer resultDistance;
 
-    private Map<Long, Long> distanceStagesMap;
+    private Map<Long, Integer> distanceStagesMap;
+
+    private int distances[][];
+
+    private int optimalDistance = Integer.MAX_VALUE;
+
+    private List<Integer> optimalPath;
+
 
 }

@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableList;
 public class Constants {
 
     public static final String APP_NAME = "Pathfinder - TSP solver";
+    public static final String MOCKUP_ALGORITHM = "Mockup implementation";
     public static final String THE_HELD_KARP_LOWER_BOUND = "The Held-Karp Lower Bound";
     public static final String STATE_UPDATE_JMS = "stateUpdate";
     private static final String ANT_COLONY_OPTIMIZATION = "Ant Colony Optimization";
@@ -25,7 +26,8 @@ public class Constants {
                     THE_HELD_KARP_LOWER_BOUND,
             ANT_COLONY_OPTIMIZATION,
             LIN_KERNIGHAN,
-            GENETIC_ALGORITHM
+            GENETIC_ALGORITHM,
+            MOCKUP_ALGORITHM
     );
 
     public static final String PREPARING_STATE = "Preparing";

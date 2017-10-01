@@ -26,7 +26,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static com.rsegeda.thesis.config.Constants.THE_HELD_KARP_LOWER_BOUND;
+import static com.rsegeda.thesis.config.Constants.ALGORITHMS;
 
 /**
  * Created by Roman Segeda on 09/04/2017.
@@ -79,7 +79,7 @@ public class ResultsTab extends HorizontalLayout {
         selectedAlgorithmLabel.setValue("Algorithm: " + selectedAlgorithm);
         setupObservers();
 
-        if (selectedAlgorithm.equals(THE_HELD_KARP_LOWER_BOUND)) {
+        if (ALGORITHMS.contains(selectedAlgorithm)) {
             tspAlgorithm.start();
 
         } else if (tspAlgorithm != null) {
@@ -96,6 +96,10 @@ public class ResultsTab extends HorizontalLayout {
     private void setupObservers() {
 
         switch (selectedAlgorithm) {
+
+            case Constants.MOCKUP_ALGORITHM:
+                tspAlgorithm = new TspAlgorithm(selection, jmsTemplate, directionsService);
+                break;
 
             case Constants.THE_HELD_KARP_LOWER_BOUND:
                 tspAlgorithm = new HeldKarpAlgorithm(selection, jmsTemplate, directionsService);
@@ -115,9 +119,8 @@ public class ResultsTab extends HorizontalLayout {
             progressPanel.removeComponent(distanceLabel);
         } else if (progressLabel == null) {
             progressLabel = new Label();
+            progressLabel.setStyleName("resultsProgressLabel");
         }
-
-        progressLabel.setStyleName("resultsProgressLabel");
 
         if (!progressLabel.isAttached()) {
             progressPanel.addComponent(progressLabel);

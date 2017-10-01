@@ -12,17 +12,23 @@ import org.springframework.jms.core.JmsTemplate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by Roman Segeda on 25/08/2017.
+ *
+ * This is the mock-up - default implementation of TSP algorithm.
+ *
  */
 @Slf4j
 public class TspAlgorithm implements Algorithm {
 
-    private final Selection selection;
+    public final Selection selection;
     private final JmsTemplate jmsTemplate;
     private final DirectionsService directionsService;
+
+    public int optimalDistance = Integer.MAX_VALUE;
+    public List<Integer> optimalPath;
+
     @Getter
     public Thread thread;
     @Getter
@@ -49,63 +55,53 @@ public class TspAlgorithm implements Algorithm {
     }
 
     @Override
-    public Map<Long, Map<Long, Long>> prepareData(List<LocationDto> locationDtoList) {
+    public int[][] prepareData() {
+
+        int size = selection.getLocationDtos().size();
+
+        int[][] distances = new int[size][size];
+
         setProgress(0);
         selection.setProgress(progress);
         selection.setState(Constants.PREPARING_STATE);
         jmsTemplate.convertAndSend(Constants.STATE_UPDATE_JMS, "");
 
-        Map<Long, Map<Long, Long>> distancesMap;
+        // Setup distances matrix
+        for (int a = 0; a < size; a++) {
+            for (int b = 0; b < size; b++) {
+                if (a == b) {
+                    distances[a][b] = 0;
 
-        distancesMap = new HashMap<>();
-
-        for (int i = 0; i < locationDtoList.size(); i++) {
-
-            LocationDto locationDto = locationDtoList.get(i);
-
-            List<LocationDto> others = new ArrayList<>();
-            others.addAll(locationDtoList);
-            others.remove(locationDto);
-
-            Map<Long, Long> map = new HashMap<>();
-
-            for (LocationDto other : others) {
-
-                Long distance = directionsService.getDirection(locationDto.getPlaceName(),
-                        other.getPlaceName()).routes[0].legs[0].distance.inMeters;
-                map.put(other.getId(), distance);
+                } else {
+                    Long distance = directionsService.getDirection(selection.getLocationDtos().get(a).getPlaceName(),
+                            selection.getLocationDtos().get(b).getPlaceName()).routes[0].legs[0].distance.inMeters;
+                    distances[a][b] = distance.intValue();
+                }
             }
-
-            distancesMap.put(locationDto.getId(), map);
-
-            setProgress(i * 100 / locationDtoList.size());
+            setProgress(a * 100 / selection.getLocationDtos().size());
             selection.setProgress(getProgress());
             jmsTemplate.convertAndSend(Constants.STATE_UPDATE_JMS, "");
         }
 
-        return distancesMap;
+        return distances;
     }
 
     @Override
     public List<LocationDto> compute() {
-        setProgress(0);
-        selection.setProgress(getProgress());
-        selection.setState(Constants.COMPUTING_STATE);
-        jmsTemplate.convertAndSend(Constants.STATE_UPDATE_JMS, "");
 
-        Long sum = 0L;
+        Integer sum = 0;
 
         List<LocationDto> locations = selection.getLocationDtos();
 
         selection.setDistanceStagesMap(new HashMap<>());
 
         for (int i = 0; i < locations.size(); i++) {
-            Long distOther;
+            int distOther;
 
             if (i == locations.size() - 1) {
-                distOther = selection.getDistancesMap().get(locations.get(i).getId()).get(locations.get(0).getId());
+                distOther = selection.getDistances()[i][0];
             } else {
-                distOther = selection.getDistancesMap().get(locations.get(i).getId()).get(locations.get(i + 1).getId());
+                distOther = selection.getDistances()[i][i + 1];
             }
 
             sum += distOther;
@@ -114,20 +110,26 @@ public class TspAlgorithm implements Algorithm {
             selection.setProgress(i / locations.size());
         }
 
-        selection.setResultDistance(sum);
-
-        selection.setResultList(selection.getLocationDtos());
+        optimalDistance = sum;
         return selection.getLocationDtos();
     }
 
     public void run() {
 
-        List<LocationDto> locationDtoList = new ArrayList<>();
-        locationDtoList.addAll(selection.getLocationDtos());
+        selection.setDistances(prepareData());
 
-        selection.setDistancesMap(prepareData(locationDtoList));
+        setProgress(0);
+        selection.setProgress(getProgress());
+        selection.setState(Constants.COMPUTING_STATE);
+        jmsTemplate.convertAndSend(Constants.STATE_UPDATE_JMS, "");
+
+        optimalDistance = Integer.MAX_VALUE;
+        optimalPath = new ArrayList<>();
 
         List<LocationDto> result = compute();
+
+        selection.setResultList(result);
+        selection.setResultDistance(optimalDistance);
 
         setProgress(100);
         selection.setProgress(getProgress());
