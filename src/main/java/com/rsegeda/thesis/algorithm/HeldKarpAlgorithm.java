@@ -23,21 +23,16 @@ public class HeldKarpAlgorithm extends TspAlgorithm {
     @Override
     public List<LocationDto> compute() {
 
-        /* ------------------------- ALGORITHM INITIALIZATION ----------------------- */
-
         int size = selection.getLocationDtos().size();
         // Initial variables to start the algorithm
         int[] vertices = new int[size - 1];
 
-        // Filling the initial vertices array with the proper values
         for (int i = 1; i < size; i++) {
             vertices[i - 1] = i;
         }
 
-        // FIRST CALL TO THE RECURSIVE FUNCTION
-        procedure(0, vertices, new ArrayList<>(), 0);
+        heldKarpProcedure(0, vertices, new ArrayList<>(), 0);
 
-        System.out.print("Path: " + optimalPath + ". Distance = " + optimalDistance);
 
         List<LocationDto> result = new ArrayList<>();
         selection.setDistanceStagesMap(new HashMap<>());
@@ -52,24 +47,23 @@ public class HeldKarpAlgorithm extends TspAlgorithm {
         return result;
     }
 
-    /* ------------------------------- RECURSIVE FUNCTION ---------------------------- */
+    private int heldKarpProcedure(int initial, int vertices[], List<Integer> path, int distance) {
 
-    private int procedure(int initial, int vertices[], List<Integer> path, int costUntilHere) {
-
-        // We concatenate the current path and the vertex taken as initial
+        // Adding vertex to existing path
         path = new ArrayList<>(path);
         path.add(initial);
 
-        int length = vertices.length;
-        int newCostUntilHere;
+        int newDistance;
+        int size = vertices.length;
 
-        // Exit case, if there are no more options to evaluate (last node)
-        if (length == 0) {
-            newCostUntilHere = costUntilHere + selection.getDistances()[initial][0];
+        // Exit - last node case
+        if (size == 0) {
+            newDistance = distance + selection.getDistances()[initial][0];
 
-            // If its cost is lower than the stored one
-            if (newCostUntilHere < optimalDistance) {
-                optimalDistance = newCostUntilHere;
+            // Update shortest route if not exceeded the optimal
+            // Add first location to route and change optimalDistance
+            if (newDistance < optimalDistance) {
+                optimalDistance = newDistance;
                 path.add(0);
                 optimalPath = path;
             }
@@ -77,51 +71,47 @@ public class HeldKarpAlgorithm extends TspAlgorithm {
             return (selection.getDistances()[initial][0]);
         }
 
-        // If the current branch has higher cost than the stored one: stop traversing
-        else if (costUntilHere > optimalDistance) {
+        // If temporary distance is higher than current optimal - skip this calculation
+        else if (distance > optimalDistance) {
             return 0;
         }
 
-        // Common case, when there are several nodes in the list
+        // Common case
         else {
 
-            int[][] newVertices = new int[length][(length - 1)];
-            int costCurrentNode, costChild;
-            int bestCost = Integer.MAX_VALUE;
+            int[][] subPath = new int[size][(size - 1)];
+            int optimal = Integer.MAX_VALUE;
 
-            // For each of the nodes of the list
-            for (int i = 0; i < length; i++) {
+            // For each location
+            for (int a = 0; a < size; a++) {
 
                 // Each recursion new vertices list is constructed
-                for (int j = 0, k = 0; j < length; j++, k++) {
+                for (int b = 0, k = 0; b < size; b++, k++) {
 
-                    // The current child is not stored in the new vertices array
-                    if (j == i) {
+                    // The same location is being skipped
+                    if (b == a) {
                         k--;
                         continue;
                     }
-                    newVertices[i][k] = vertices[j];
+                    subPath[a][k] = vertices[b];
                 }
 
-                // Cost of arriving the current node from its parent
-                costCurrentNode = selection.getDistances()[initial][vertices[i]];
+                // Distance between parent and current node
+                int currentDistance = selection.getDistances()[initial][vertices[a]];
 
-                // Here the cost to be passed to the recursive function is computed
-                newCostUntilHere = costCurrentNode + costUntilHere;
+                // Current calculated distance including last node
+                newDistance = currentDistance + distance;
 
-                // RECURSIVE CALLS TO THE FUNCTION IN ORDER TO COMPUTE THE COSTS
-                costChild = procedure(vertices[i], newVertices[i], path, newCostUntilHere);
+                int childrenDistance = heldKarpProcedure(vertices[a], subPath[a], path, newDistance);
 
-                // The cost of every child + the current node cost is computed
-                int totalCost = costChild + costCurrentNode;
+                int totalDistance = childrenDistance + currentDistance;
 
-                // Finally we select from the minimum from all possible children costs
-                if (totalCost < bestCost) {
-                    bestCost = totalCost;
+                if (totalDistance < optimal) {
+                    optimal = totalDistance;
                 }
             }
 
-            return (bestCost);
+            return (optimal);
         }
     }
 

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 public class SettingsTab extends HorizontalLayout {
 
     private Label headerLabel = new Label("Settings tab content");
+
     void init() {
         if (headerLabel.isAttached()) {
             removeComponent(headerLabel);
