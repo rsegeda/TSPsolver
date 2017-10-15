@@ -15,30 +15,31 @@ import java.util.List;
 
 /**
  * Created by Roman Segeda on 25/08/2017.
- *
+ * <p>
  * This is the mock-up - default implementation of TSP algorithm.
- *
  */
 @Slf4j
 public class TspAlgorithm implements Algorithm {
 
-    public final Selection selection;
     private final JmsTemplate jmsTemplate;
     private final DirectionsService directionsService;
-
-    public int optimalDistance = Integer.MAX_VALUE;
-    public List<Integer> optimalPath;
+    Selection selection;
+    Settings settings;
+    int optimalDistance = Integer.MAX_VALUE;
+    List<Integer> optimalPath;
+    private boolean stopAlgorithm = false;
 
     @Getter
     public Thread thread;
     @Getter
     public int progress = 0;
-    boolean stopAlgorithm = false;
 
     @SuppressWarnings("SpringJavaAutowiredMembersInspection")
     @Autowired
-    public TspAlgorithm(Selection selection, JmsTemplate jmsTemplate, DirectionsService directionsService) {
+    public TspAlgorithm(Selection selection, Settings settings, JmsTemplate jmsTemplate, DirectionsService
+            directionsService) {
         this.selection = selection;
+        this.settings = settings;
         this.jmsTemplate = jmsTemplate;
         this.directionsService = directionsService;
     }
@@ -151,7 +152,7 @@ public class TspAlgorithm implements Algorithm {
         setStopAlgorithm(true);
     }
 
-    public void setStopAlgorithm(boolean stopAlgorithm) {
+    private void setStopAlgorithm(boolean stopAlgorithm) {
         this.stopAlgorithm = stopAlgorithm;
     }
 

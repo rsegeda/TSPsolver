@@ -1,6 +1,8 @@
 package com.rsegeda.thesis.view;
 
+import com.rsegeda.thesis.algorithm.AntColonyAlgorithm;
 import com.rsegeda.thesis.algorithm.HeldKarpAlgorithm;
+import com.rsegeda.thesis.algorithm.Settings;
 import com.rsegeda.thesis.algorithm.TspAlgorithm;
 import com.rsegeda.thesis.component.Selection;
 import com.rsegeda.thesis.config.Constants;
@@ -37,6 +39,7 @@ public class ResultsTab extends HorizontalLayout {
 
     private final transient Properties properties;
     private transient Selection selection;
+    private transient Settings settings;
     private transient JmsTemplate jmsTemplate;
     private transient DirectionsService directionsService;
 
@@ -65,10 +68,11 @@ public class ResultsTab extends HorizontalLayout {
     private boolean created = false;
 
     @Autowired
-    public ResultsTab(Properties properties, Selection selection, JmsTemplate jmsTemplate,
+    public ResultsTab(Properties properties, Selection selection, Settings settings, JmsTemplate jmsTemplate,
                       DirectionsService directionsService) {
         this.properties = properties;
         this.selection = selection;
+        this.settings = settings;
         this.jmsTemplate = jmsTemplate;
         this.directionsService = directionsService;
     }
@@ -91,6 +95,34 @@ public class ResultsTab extends HorizontalLayout {
         locationGrid.setItems(Collections.emptyList());
         googleMap.clearMarkers();
         polylines.forEach(googleMapPolyline -> googleMap.removePolyline(googleMapPolyline));
+
+
+        if (distanceLabel != null && distanceLabel.isAttached()) {
+            progressPanel.removeComponent(distanceLabel);
+        }
+
+        if (progressLabel == null) {
+            progressLabel = new Label();
+            progressLabel.setStyleName("resultsProgressLabel");
+        } else if (progressLabel.isAttached()) {
+            progressPanel.removeComponent(progressLabel);
+            progressPanel.addComponent(progressLabel);
+        }
+
+        if (!progressLabel.isAttached()) {
+            progressPanel.addComponent(progressLabel);
+        }
+        //        if (progressLabel != null && progressLabel.isAttached()) {
+        //            progressPanel.removeComponent(progressLabel);
+        //            progressPanel.removeComponent(distanceLabel);
+        //        } else if (progressLabel == null) {
+        //            progressLabel = new Label();
+        //            progressLabel.setStyleName("resultsProgressLabel");
+        //        }
+        //
+        //        if (!progressLabel.isAttached()) {
+        //            progressPanel.addComponent(progressLabel);
+        //        }
     }
 
     private void setupObservers() {
@@ -98,11 +130,15 @@ public class ResultsTab extends HorizontalLayout {
         switch (selectedAlgorithm) {
 
             case Constants.MOCKUP_ALGORITHM:
-                tspAlgorithm = new TspAlgorithm(selection, jmsTemplate, directionsService);
+                tspAlgorithm = new TspAlgorithm(selection, settings, jmsTemplate, directionsService);
                 break;
 
             case Constants.THE_HELD_KARP_LOWER_BOUND:
-                tspAlgorithm = new HeldKarpAlgorithm(selection, jmsTemplate, directionsService);
+                tspAlgorithm = new HeldKarpAlgorithm(selection, settings, jmsTemplate, directionsService);
+                break;
+
+            case Constants.ANT_COLONY_OPTIMIZATION:
+                tspAlgorithm = new AntColonyAlgorithm(selection, settings, jmsTemplate, directionsService);
                 break;
 
             default:
@@ -114,17 +150,6 @@ public class ResultsTab extends HorizontalLayout {
             return;
         }
 
-        if (progressLabel != null && progressLabel.isAttached()) {
-            progressPanel.removeComponent(progressLabel);
-            progressPanel.removeComponent(distanceLabel);
-        } else if (progressLabel == null) {
-            progressLabel = new Label();
-            progressLabel.setStyleName("resultsProgressLabel");
-        }
-
-        if (!progressLabel.isAttached()) {
-            progressPanel.addComponent(progressLabel);
-        }
     }
 
 
@@ -251,7 +276,8 @@ public class ResultsTab extends HorizontalLayout {
     }
 
     private void pinMarkers() {
-        selection.getResultList().forEach(locationDto -> createMarker(locationDto.getPlaceName(), locationDto.getLatLon()));
+        selection.getResultList().forEach(locationDto -> createMarker(locationDto.getPlaceName(), locationDto
+                .getLatLon()));
     }
 
     private void createMarker(String name, LatLon latLon) {

@@ -11,11 +11,11 @@ public class Constants {
     public static final String MOCKUP_ALGORITHM = "Mockup implementation";
     public static final String THE_HELD_KARP_LOWER_BOUND = "The Held-Karp Lower Bound";
     public static final String STATE_UPDATE_JMS = "stateUpdate";
-    private static final String ANT_COLONY_OPTIMIZATION = "Ant Colony Optimization";
-    private static final String LIN_KERNIGHAN = "Lin Kerninghan";
-    private static final String GENETIC_ALGORITHM = "Genetic algorithm";
-    private static final String GOAL_DISTANCE = "Distance";
-    private static final String GOAL_TIME = "Time";
+    public static final String ANT_COLONY_OPTIMIZATION = "Ant Colony Optimization";
+    public static final String LIN_KERNIGHAN = "Lin Kerninghan";
+    public static final String GENETIC_ALGORITHM = "Genetic algorithm";
+    public static final String GOAL_DISTANCE = "Distance";
+    public static final String GOAL_TIME = "Time";
 
     public static final ImmutableList<String> GOALS = ImmutableList.of("" +
                     GOAL_DISTANCE,

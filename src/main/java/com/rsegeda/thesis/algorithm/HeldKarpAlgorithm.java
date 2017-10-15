@@ -16,8 +16,9 @@ import java.util.List;
 @Slf4j
 public class HeldKarpAlgorithm extends TspAlgorithm {
 
-    public HeldKarpAlgorithm(Selection selection, JmsTemplate jmsTemplate, DirectionsService directionsService) {
-        super(selection, jmsTemplate, directionsService);
+    public HeldKarpAlgorithm(Selection selection, Settings settings, JmsTemplate jmsTemplate, DirectionsService
+            directionsService) {
+        super(selection, settings, jmsTemplate, directionsService);
     }
 
     @Override
@@ -113,16 +114,6 @@ public class HeldKarpAlgorithm extends TspAlgorithm {
 
             return (optimal);
         }
-    }
-
-    @Override
-    public void stop() {
-        setStopAlgorithm(true);
-    }
-
-    @Override
-    public void setStopAlgorithm(boolean stopAlgorithm) {
-        this.stopAlgorithm = stopAlgorithm;
     }
 
 }
