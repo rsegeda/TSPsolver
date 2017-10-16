@@ -16,9 +16,9 @@ import java.util.List;
 @Slf4j
 public class HeldKarpAlgorithm extends TspAlgorithm {
 
-    public HeldKarpAlgorithm(Selection selection, Settings settings, JmsTemplate jmsTemplate, DirectionsService
+    public HeldKarpAlgorithm(Selection selection, JmsTemplate jmsTemplate, DirectionsService
             directionsService) {
-        super(selection, settings, jmsTemplate, directionsService);
+        super(selection, jmsTemplate, directionsService);
     }
 
     @Override

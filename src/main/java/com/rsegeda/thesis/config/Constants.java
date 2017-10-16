@@ -13,7 +13,6 @@ public class Constants {
     public static final String STATE_UPDATE_JMS = "stateUpdate";
     public static final String ANT_COLONY_OPTIMIZATION = "Ant Colony Optimization";
     public static final String LIN_KERNIGHAN = "Lin Kerninghan";
-    public static final String GENETIC_ALGORITHM = "Genetic algorithm";
     public static final String GOAL_DISTANCE = "Distance";
     public static final String GOAL_TIME = "Time";
 
@@ -26,7 +25,6 @@ public class Constants {
                     THE_HELD_KARP_LOWER_BOUND,
             ANT_COLONY_OPTIMIZATION,
             LIN_KERNIGHAN,
-            GENETIC_ALGORITHM,
             MOCKUP_ALGORITHM
     );
 

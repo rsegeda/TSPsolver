@@ -24,7 +24,6 @@ public class TspAlgorithm implements Algorithm {
     private final JmsTemplate jmsTemplate;
     private final DirectionsService directionsService;
     Selection selection;
-    Settings settings;
     int optimalDistance = Integer.MAX_VALUE;
     List<Integer> optimalPath;
     private boolean stopAlgorithm = false;
@@ -36,10 +35,9 @@ public class TspAlgorithm implements Algorithm {
 
     @SuppressWarnings("SpringJavaAutowiredMembersInspection")
     @Autowired
-    public TspAlgorithm(Selection selection, Settings settings, JmsTemplate jmsTemplate, DirectionsService
+    public TspAlgorithm(Selection selection, JmsTemplate jmsTemplate, DirectionsService
             directionsService) {
         this.selection = selection;
-        this.settings = settings;
         this.jmsTemplate = jmsTemplate;
         this.directionsService = directionsService;
     }

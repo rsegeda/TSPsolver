@@ -1,5 +1,6 @@
 package com.rsegeda.thesis.component;
 
+import com.rsegeda.thesis.algorithm.Settings;
 import com.rsegeda.thesis.config.Constants;
 import com.rsegeda.thesis.location.LocationDto;
 import lombok.Data;
@@ -36,5 +37,9 @@ public class Selection {
 
     private List<Integer> optimalPath;
 
+    private Settings settings;
 
+    public Selection() {
+        settings = new Settings();
+    }
 }

@@ -33,9 +33,9 @@ public class AntColonyAlgorithm extends TspAlgorithm implements Algorithm {
 
     private int currentIndex;
 
-    public AntColonyAlgorithm(Selection selection, Settings settings, JmsTemplate jmsTemplate, DirectionsService
+    public AntColonyAlgorithm(Selection selection, JmsTemplate jmsTemplate, DirectionsService
             directionsService) {
-        super(selection, settings, jmsTemplate, directionsService);
+        super(selection, jmsTemplate, directionsService);
     }
 
     @Override
@@ -44,7 +44,7 @@ public class AntColonyAlgorithm extends TspAlgorithm implements Algorithm {
         // Initialization
         distances = selection.getDistances();
         numberOfCities = distances.length;
-        numberOfAnts = (int) (numberOfCities * settings.AOT_ANT_GROUP_SIZE);
+        numberOfAnts = (int) (numberOfCities * selection.getSettings().getAotAntGroupSize());
 
         trails = new double[numberOfCities][numberOfCities];
         probabilities = new double[numberOfCities];
@@ -54,7 +54,7 @@ public class AntColonyAlgorithm extends TspAlgorithm implements Algorithm {
         // Computing
         setupAnts();
         clearTrails();
-        IntStream.range(0, settings.AOT_NUMBER_OF_ITERATIONS)
+        IntStream.range(0, selection.getSettings().getAotNumberOfIterations())
                 .forEach(i -> {
                     moveAnts();
                     updateTrails();
@@ -140,8 +140,9 @@ public class AntColonyAlgorithm extends TspAlgorithm implements Algorithm {
 
         for (int l = 0; l < numberOfCities; l++) {
             if (!ant.visited(l)) {
-                pheromone += Math.pow(trails[i][l], settings.AOT_ALPHA) * Math.pow(1.0 / distances[i][l], settings
-                        .AOT_BETA);
+                pheromone += Math.pow(trails[i][l], selection.getSettings().getAotBeta()) * Math.pow(1.0 /
+                        distances[i][l], selection.getSettings()
+                        .getAotBeta());
             }
         }
 
@@ -149,8 +150,9 @@ public class AntColonyAlgorithm extends TspAlgorithm implements Algorithm {
             if (ant.visited(j)) {
                 probabilities[j] = 0.0;
             } else {
-                double numerator = Math.pow(trails[i][j], settings.AOT_ALPHA) * Math.pow(1.0 / distances[i][j],
-                        settings.AOT_BETA);
+                double numerator = Math.pow(trails[i][j], selection.getSettings().getAotAlpha()) * Math.pow(1.0 /
+                                distances[i][j],
+                        selection.getSettings().getAotBeta());
                 probabilities[j] = numerator / pheromone;
             }
         }
@@ -162,7 +164,7 @@ public class AntColonyAlgorithm extends TspAlgorithm implements Algorithm {
     private void updateTrails() {
         for (int i = 0; i < numberOfCities; i++) {
             for (int j = 0; j < numberOfCities; j++) {
-                trails[i][j] *= settings.AOT_EVAPORATION;
+                trails[i][j] *= selection.getSettings().getAotEvaporation();
             }
         }
         for (Ant a : ants) {
@@ -198,7 +200,7 @@ public class AntColonyAlgorithm extends TspAlgorithm implements Algorithm {
     private void clearTrails() {
         IntStream.range(0, numberOfCities)
                 .forEach(i -> IntStream.range(0, numberOfCities)
-                        .forEach(j -> trails[i][j] = settings.AOT_NUMBER_OF_TRAILS));
+                        .forEach(j -> trails[i][j] = selection.getSettings().getAotNumberOfTrails()));
     }
 
     public static class Ant {
