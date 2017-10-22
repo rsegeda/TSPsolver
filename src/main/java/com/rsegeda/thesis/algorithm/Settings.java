@@ -11,9 +11,9 @@ public class Settings {
     //    Ant Colony Algorithm:
 
     int aotNumberOfIterations = 1000;
-    double aotNumberOfTrails = 1.0;
-    int aotAlpha = 1;
     int aotBeta = 5;
+    int aotAlpha = 1;
+    double aotNumberOfTrails = 1.0;
     double aotEvaporation = 0.5;
     double aotAntGroupSize = 0.8;
 }

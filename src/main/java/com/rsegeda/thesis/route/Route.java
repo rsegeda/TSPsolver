@@ -19,7 +19,7 @@ import java.util.List;
 @NoArgsConstructor
 @Data
 @Builder
-public class Route {
+class Route {
 
     @Id
     Long id;

@@ -12,6 +12,12 @@ import java.util.List;
 
 /**
  * Created by Roman Segeda on 01/08/2017.
+ *
+ * Implementation based on
+ * "A Dynamic Programming Approach to Sequencing Problems"
+ * @author Michael Held and Richard M. Karp
+ *
+ * @link http://people.cs.vt.edu/~gback/ICPCHandbook/book/copiesfromweb/held-karp-jsiam-1962.pdf
  */
 @Slf4j
 public class HeldKarpAlgorithm extends TspAlgorithm {

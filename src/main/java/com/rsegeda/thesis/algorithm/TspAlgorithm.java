@@ -15,8 +15,10 @@ import java.util.List;
 
 /**
  * Created by Roman Segeda on 25/08/2017.
- *
+ * <p>
  * This is the mock-up - default implementation of TSP algorithm.
+ * The path is build by rewriting input list of locations to the output and retrieving distances and intervals
+ * between them.
  */
 @Slf4j
 public class TspAlgorithm implements Algorithm {

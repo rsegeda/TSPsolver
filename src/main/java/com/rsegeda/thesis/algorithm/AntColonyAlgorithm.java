@@ -16,12 +16,16 @@ import java.util.stream.IntStream;
 
 /**
  * Created by Roman Segeda on 03/10/2017.
+ * <p>
+ * Implementation based on the paper called "Ant colony optimization theory: A survey"
+ * @author Marco Dorigoa, Christian Blumb
+ *
+ * @link http://www.sciencedirect.com/science/article/pii/S0304397505003798
  */
 
 public class AntColonyAlgorithm extends TspAlgorithm implements Algorithm {
 
     private int numberOfLocations;
-    private int numberOfAnts;
 
     private int[][] distances;
     private double trails[][];
@@ -44,7 +48,7 @@ public class AntColonyAlgorithm extends TspAlgorithm implements Algorithm {
         //         Initialization
         distances = selection.getDistances();
         numberOfLocations = distances.length;
-        numberOfAnts = (int) (numberOfLocations * selection.getSettings().getAotAntGroupSize());
+        int numberOfAnts = (int) (numberOfLocations * selection.getSettings().getAotAntGroupSize());
 
         trails = new double[numberOfLocations][numberOfLocations];
         probabilities = new double[numberOfLocations];

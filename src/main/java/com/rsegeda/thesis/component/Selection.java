@@ -11,6 +11,9 @@ import java.util.Map;
 
 /**
  * Created by Roman Segeda on 26/08/2017.
+ * <p>
+ * Component below is a singleton which is used to share values across application. The results and settings are
+ * stored here. This is the container for values to be transferred across different views.
  */
 @Data
 @Component
@@ -21,22 +24,41 @@ public class Selection {
 
     private String algorithmName;
 
+    /**
+     * List of locations on input
+     */
     private List<LocationDto> locationDtos;
 
+    /**
+     * List of locations on output
+     */
     private List<LocationDto> resultList;
 
-    private Map<Long, Map<Long, Long>> distancesMap;
-
+    /**
+     * Results of algorithms computation.
+     */
     private Integer resultDistance;
 
+    private Integer resultTime;
+
+    /**
+     * Maps that have locationDtos' Ids and values of distance/interval to the next node.
+     * Used to display on Results grid as an additional columns.
+     */
     private Map<Long, Integer> distanceStagesMap;
 
+    private Map<Long, Integer> intervalStagesMap;
+
+    /**
+     * 2D Arrays that contain intervals and distances between all nodes.
+     */
     private int distances[][];
 
-    private int optimalDistance = Integer.MAX_VALUE;
+    private int intervals[][];
 
-    private List<Integer> optimalPath;
-
+    /**
+     * Settings for each algorithm that can be updated in the SettingsTab view.
+     */
     private Settings settings;
 
     public Selection() {

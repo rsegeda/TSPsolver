@@ -15,7 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @Data
 @Builder
-public final class RouteDto {
+final class RouteDto {
 
     Long id;
     List<LocationDto> locations;

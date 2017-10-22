@@ -18,6 +18,12 @@ import java.util.stream.IntStream;
 
 /**
  * Created by Roman Segeda on 18/10/2017.
+ *
+ * This is the Lin-Kernighan algorithm implementation. It is based on paper:
+ * "An effective implementation of the Lin–Kernighan traveling salesman heuristic"
+ * @author Keld Helsgaun.
+ *
+ * @link http://www.sciencedirect.com/science/article/pii/S0377221799002842
  */
 
 public class LinKernighanAlgorithm extends TspAlgorithm {
@@ -114,7 +120,7 @@ public class LinKernighanAlgorithm extends TspAlgorithm {
     /**
      * Improves the currentPath by starting from a particular node and checking the new gain
      *
-     * @param i the reference to the city to start with.
+     * @param i a reference to the city which to start with.
      */
     private void improve(int i, boolean previous) {
         int indexA = previous ? getPreviousIndex(i) : getNextIndex(i);
