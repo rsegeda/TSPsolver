@@ -15,7 +15,7 @@ import java.util.List;
 
 /**
  * Created by Roman Segeda on 25/08/2017.
- * <p>
+ *
  * This is the mock-up - default implementation of TSP algorithm.
  */
 @Slf4j

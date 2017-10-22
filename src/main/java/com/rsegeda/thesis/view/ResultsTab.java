@@ -2,6 +2,7 @@ package com.rsegeda.thesis.view;
 
 import com.rsegeda.thesis.algorithm.AntColonyAlgorithm;
 import com.rsegeda.thesis.algorithm.HeldKarpAlgorithm;
+import com.rsegeda.thesis.algorithm.LinKernighanAlgorithm;
 import com.rsegeda.thesis.algorithm.TspAlgorithm;
 import com.rsegeda.thesis.component.Selection;
 import com.rsegeda.thesis.config.Constants;
@@ -125,6 +126,10 @@ public class ResultsTab extends HorizontalLayout {
 
             case Constants.ANT_COLONY_OPTIMIZATION:
                 tspAlgorithm = new AntColonyAlgorithm(selection, jmsTemplate, directionsService);
+                break;
+
+            case Constants.LIN_KERNIGHAN:
+                tspAlgorithm = new LinKernighanAlgorithm(selection, jmsTemplate, directionsService);
                 break;
 
             default:
