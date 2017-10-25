@@ -213,7 +213,8 @@ public class ResultsTab extends HorizontalLayout {
     @JmsListener(destination = "algorithmResult", containerFactory = "jmsListenerFactory")
     public void showResults() {
 
-        locationList = selection.getResultList();
+        locationList = selection.getResultList().subList(0, selection.getResultList().size() - 2);
+        selection.getResultList().get(0).setIndex(1);
         locationGrid.setItems(locationList);
         pinMarkers();
         drawLines();

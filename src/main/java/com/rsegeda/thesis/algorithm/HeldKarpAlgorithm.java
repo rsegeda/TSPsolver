@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.jms.core.JmsTemplate;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -40,18 +39,13 @@ public class HeldKarpAlgorithm extends TspAlgorithm {
 
         heldKarpProcedure(0, vertices, new ArrayList<>(), 0);
 
-
-        List<LocationDto> result = new ArrayList<>();
-        selection.setDistanceStagesMap(new HashMap<>());
-
-        for (int i = 0; i < optimalPath.size() - 1; i++) {
-            result.add(selection.getLocationDtos().get(optimalPath.get(i)));
-
-            selection.getDistanceStagesMap().put(selection.getLocationDtos().get(optimalPath.get(i)).getId(),
-                    selection.getDistances()[optimalPath.get(i)][optimalPath.get(i + 1)]);
+        //        workaround for currentPath
+        currentPath = new int[optimalPath.size()];
+        for (int i = 0; i < optimalPath.size(); i++) {
+            currentPath[i] = optimalPath.get(i);
         }
 
-        return result;
+        return getResult();
     }
 
     private int heldKarpProcedure(int initial, int vertices[], List<Integer> path, int distance) {

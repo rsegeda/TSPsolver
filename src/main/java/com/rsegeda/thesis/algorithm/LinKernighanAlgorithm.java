@@ -9,30 +9,20 @@ import lombok.ToString;
 import org.springframework.jms.core.JmsTemplate;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
  * Created by Roman Segeda on 18/10/2017.
  *
- * This is the Lin-Kernighan algorithm implementation. It is based on paper:
- * "An effective implementation of the Lin–Kernighan traveling salesman heuristic"
- * @author Keld Helsgaun.
+ * This is the Lin-Kernighan algorithm implementation. It is based on original paper:
+ * "An Effective Heuristic Algorithm for the Traveling-Salesman Problem"
+ * @author Lin, Shen; Kernighan, B. W.
  *
- * @link http://www.sciencedirect.com/science/article/pii/S0377221799002842
+ * @link https://eng.ucmerced.edu/people/yzhang/papers/Heuristic/Lin_Kernighan
  */
 
 public class LinKernighanAlgorithm extends TspAlgorithm {
-
-    private int numberOfCities;
-
-    private int[] currentPath;
-
-    private int[][] distancesArray;
 
     public LinKernighanAlgorithm(Selection selection, JmsTemplate jmsTemplate, DirectionsService directionsService) {
         super(selection, jmsTemplate, directionsService);
@@ -41,68 +31,11 @@ public class LinKernighanAlgorithm extends TspAlgorithm {
     @Override
     public List<LocationDto> compute() {
 
-        this.numberOfCities = selection.getLocationDtos().size();
-        this.distancesArray = selection.getDistances();
-        this.currentPath = getRandomPath();
+        currentPath = getRandomPath();
 
         startLinKernighan();
 
-        //        Prepare results and setup each stage distance
-        List<LocationDto> result = new ArrayList<>();
-
-        int[] clone = currentPath.clone();
-        List<Integer> optimalPath = new ArrayList<>();
-
-        optimalPath.addAll(Arrays.stream(clone).boxed().collect(Collectors.toList()));
-        optimalPath.add(optimalPath.get(0));
-
-        selection.setDistanceStagesMap(new HashMap<>());
-
-        for (int i = 0; i < optimalPath.size() - 1; i++) {
-            result.add(selection.getLocationDtos().get(optimalPath.get(i)));
-            int dist = selection.getDistances()[optimalPath.get(i)][optimalPath.get(i + 1)];
-            selection.getDistanceStagesMap().put(selection.getLocationDtos().get(optimalPath.get(i)).getId(),
-                    dist);
-        }
-
-        optimalDistance = (int) getCurrentDistance();
-        return result;
-    }
-
-    /**
-     * Generates random path with drunken sailor algorithm
-     */
-    private int[] getRandomPath() {
-        int[] randomPath = new int[numberOfCities];
-
-        IntStream.range(0, numberOfCities - 1).forEach(i -> randomPath[i] = i);
-
-        Random random = new Random();
-
-        IntStream.range(0, numberOfCities - 1).forEach(i -> {
-            int index = random.nextInt(i + 1);
-            // swap elements
-            int a = randomPath[index];
-            randomPath[index] = randomPath[i];
-            randomPath[i] = a;
-        });
-
-        return randomPath;
-    }
-
-    /**
-     * Returns the current optimal distance
-     */
-    private double getCurrentDistance() {
-        double sum = 0;
-
-        for (int i = 0; i < this.numberOfCities; i++) {
-            int a = currentPath[i];
-            int b = currentPath[(i + 1) % this.numberOfCities];
-            sum += this.distancesArray[a][b];
-        }
-
-        return sum;
+        return getResult();
     }
 
     /**

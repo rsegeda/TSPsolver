@@ -39,22 +39,22 @@ public class Selection {
      */
     private Integer resultDistance;
 
-    private Integer resultTime;
+    private Integer resultDuration;
 
     /**
-     * Maps that have locationDtos' Ids and values of distance/interval to the next node.
+     * Maps that have locationDtos' Ids and values of distance/duration to the next node.
      * Used to display on Results grid as an additional columns.
      */
     private Map<Long, Integer> distanceStagesMap;
 
-    private Map<Long, Integer> intervalStagesMap;
+    private Map<Long, Integer> durationStagesMap;
 
     /**
-     * 2D Arrays that contain intervals and distances between all nodes.
+     * 2D Arrays that contain durations and distances between all nodes.
      */
-    private int distances[][];
+    private int[][] distances;
 
-    private int intervals[][];
+    private int[][] durations;
 
     /**
      * Settings for each algorithm that can be updated in the SettingsTab view.

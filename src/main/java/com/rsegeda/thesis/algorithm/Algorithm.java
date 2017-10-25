@@ -30,10 +30,8 @@ public interface Algorithm extends Runnable {
 
     /**
      * This method purpose is to calculate distances between all the locations. It uses Google Directions API.
-     *
-     * @return matrix of distances between all of the nodes
      */
-    int[][] prepareData();
+    void prepareData();
 
     /**
      * Method that has to be overridden for each implementation of a different algorithm.

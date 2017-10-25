@@ -6,31 +6,24 @@ import com.rsegeda.thesis.utils.DirectionsService;
 import org.springframework.jms.core.JmsTemplate;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.OptionalInt;
 import java.util.Random;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
  * Created by Roman Segeda on 03/10/2017.
  * <p>
  * Implementation based on the paper called "Ant colony optimization theory: A survey"
- * @author Marco Dorigoa, Christian Blumb
  *
+ * @author Marco Dorigoa, Christian Blumb
  * @link http://www.sciencedirect.com/science/article/pii/S0304397505003798
  */
 
 public class AntColonyAlgorithm extends TspAlgorithm implements Algorithm {
 
-    private int numberOfLocations;
-
-    private int[][] distances;
     private double trails[][];
     private double probabilities[];
-    private int[] bestTourOrder;
 
     private List<Ant> ants = new ArrayList<>();
     private Random random = new Random();
@@ -46,25 +39,25 @@ public class AntColonyAlgorithm extends TspAlgorithm implements Algorithm {
     public List<LocationDto> compute() {
 
         //         Initialization
-        distances = selection.getDistances();
-        numberOfLocations = distances.length;
-        int numberOfAnts = (int) (numberOfLocations * selection.getSettings().getAotAntGroupSize());
+        distancesArray = selection.getDistances();
+        numberOfCities = distancesArray.length;
+        int numberOfAnts = (int) (numberOfCities * selection.getSettings().getAotAntGroupSize());
 
-        trails = new double[numberOfLocations][numberOfLocations];
-        probabilities = new double[numberOfLocations];
+        trails = new double[numberOfCities][numberOfCities];
+        probabilities = new double[numberOfCities];
 
-        IntStream.range(0, numberOfAnts).forEach(i -> ants.add(new Ant(numberOfLocations)));
+        IntStream.range(0, numberOfAnts).forEach(i -> ants.add(new Ant(numberOfCities)));
 
         //         Set starting index of locations to begin with foremost element
         IntStream.range(0, numberOfAnts)
                 .forEach(i -> ants.forEach(ant -> {
                     ant.reset();
-                    ant.visitLocation(-1, random.nextInt(numberOfLocations));
+                    ant.visitLocation(-1, random.nextInt(numberOfCities));
                 }));
         currentLocationIndex = 0;
 
-        IntStream.range(0, numberOfLocations)
-                .forEach(i -> IntStream.range(0, numberOfLocations)
+        IntStream.range(0, numberOfCities)
+                .forEach(i -> IntStream.range(0, numberOfCities)
                         .forEach(j -> trails[i][j] = selection.getSettings().getAotNumberOfTrails()));
 
         //        Main loop is executed N times. Setting is retrieved from settings tab and may be adjusted.
@@ -75,29 +68,11 @@ public class AntColonyAlgorithm extends TspAlgorithm implements Algorithm {
                     updateOptimalPath();
                 });
 
-        //        Prepare results and setup each stage distance
-        List<LocationDto> result = new ArrayList<>();
-
-        int[] clone = bestTourOrder.clone();
-        List<Integer> optimalPath = new ArrayList<>();
-
-        optimalPath.addAll(Arrays.stream(clone).boxed().collect(Collectors.toList()));
-        optimalPath.add(optimalPath.get(0));
-
-        selection.setDistanceStagesMap(new HashMap<>());
-
-        for (int i = 0; i < optimalPath.size() - 1; i++) {
-            result.add(selection.getLocationDtos().get(optimalPath.get(i)));
-
-            selection.getDistanceStagesMap().put(selection.getLocationDtos().get(optimalPath.get(i)).getId(),
-                    selection.getDistances()[optimalPath.get(i)][optimalPath.get(i + 1)]);
-        }
-
-        return result;
+        return getResult();
     }
 
     private void moveAnts() {
-        IntStream.range(currentLocationIndex, numberOfLocations - 1)
+        IntStream.range(currentLocationIndex, numberOfCities - 1)
                 .forEach(i -> {
                     ants.forEach(ant -> ant.visitLocation(currentLocationIndex, selectNextLocation(ant)));
                     currentLocationIndex++;
@@ -106,10 +81,10 @@ public class AntColonyAlgorithm extends TspAlgorithm implements Algorithm {
 
     private int selectNextLocation(Ant ant) throws AotException {
         double randNum = 0.01;
-        int randomInt = random.nextInt(numberOfLocations - currentLocationIndex);
+        int randomInt = random.nextInt(numberOfCities - currentLocationIndex);
 
         if (random.nextDouble() < randNum) {
-            OptionalInt cityIndex = IntStream.range(0, numberOfLocations)
+            OptionalInt cityIndex = IntStream.range(0, numberOfCities)
                     .filter(i -> (i == randomInt) && !ant.visited(i))
                     .findFirst();
             if (cityIndex.isPresent()) {
@@ -122,7 +97,7 @@ public class AntColonyAlgorithm extends TspAlgorithm implements Algorithm {
         double randomDouble = random.nextDouble();
         double totalProbability = 0;
 
-        for (int i = 0; i < numberOfLocations; i++) {
+        for (int i = 0; i < numberOfCities; i++) {
             totalProbability += probabilities[i];
 
             if (totalProbability >= randomDouble) {
@@ -137,22 +112,22 @@ public class AntColonyAlgorithm extends TspAlgorithm implements Algorithm {
         int i = ant.trail[currentLocationIndex];
         double pheromone = 0.0;
 
-        for (int l = 0; l < numberOfLocations; l++) {
+        for (int l = 0; l < numberOfCities; l++) {
 
             if (!ant.visited(l)) {
                 pheromone += Math.pow(trails[i][l], selection.getSettings().getAotBeta()) * Math.pow(1.0 /
-                        distances[i][l], selection.getSettings()
+                        distancesArray[i][l], selection.getSettings()
                         .getAotBeta());
             }
         }
 
-        for (int j = 0; j < numberOfLocations; j++) {
+        for (int j = 0; j < numberOfCities; j++) {
 
             if (ant.visited(j)) {
                 probabilities[j] = 0.0;
             } else {
                 double numerator = Math.pow(trails[i][j], selection.getSettings().getAotAlpha()) * Math.pow(1.0 /
-                                distances[i][j],
+                                distancesArray[i][j],
                         selection.getSettings().getAotBeta());
                 probabilities[j] = numerator / pheromone;
             }
@@ -160,8 +135,8 @@ public class AntColonyAlgorithm extends TspAlgorithm implements Algorithm {
     }
 
     private void updateTrails() {
-        for (int i = 0; i < numberOfLocations; i++) {
-            for (int j = 0; j < numberOfLocations; j++) {
+        for (int i = 0; i < numberOfCities; i++) {
+            for (int j = 0; j < numberOfCities; j++) {
 
                 trails[i][j] *= selection.getSettings().getAotEvaporation();
             }
@@ -169,26 +144,26 @@ public class AntColonyAlgorithm extends TspAlgorithm implements Algorithm {
 
         for (Ant a : ants) {
             double pheromoneLeft = 500;
-            double contribution = pheromoneLeft / a.trailLength(distances);
+            double contribution = pheromoneLeft / a.trailLength(distancesArray);
 
-            for (int i = 0; i < numberOfLocations - 1; i++) {
+            for (int i = 0; i < numberOfCities - 1; i++) {
                 trails[a.trail[i]][a.trail[i + 1]] += contribution;
             }
-            trails[a.trail[numberOfLocations - 1]][a.trail[0]] += contribution;
+            trails[a.trail[numberOfCities - 1]][a.trail[0]] += contribution;
         }
     }
 
     private void updateOptimalPath() {
-        if (bestTourOrder == null) {
-            bestTourOrder = ants.get(0).trail;
+        if (currentPath == null) {
+            currentPath = ants.get(0).trail;
             optimalDistance = ants.get(0)
-                    .trailLength(distances);
+                    .trailLength(distancesArray);
         }
 
         for (Ant a : ants) {
-            if (a.trailLength(distances) < optimalDistance) {
-                optimalDistance = a.trailLength(distances);
-                bestTourOrder = a.trail.clone();
+            if (a.trailLength(distancesArray) < optimalDistance) {
+                optimalDistance = a.trailLength(distancesArray);
+                currentPath = a.trail.clone();
             }
         }
     }
