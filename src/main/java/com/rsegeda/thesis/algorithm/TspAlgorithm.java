@@ -153,7 +153,7 @@ public class TspAlgorithm implements Algorithm {
                 result.add(first);
 
             } catch (CloneNotSupportedException e) {
-                e.printStackTrace();
+                log.error(e.getMessage());
             }
         }
 
@@ -182,21 +182,21 @@ public class TspAlgorithm implements Algorithm {
         List<LocationDto> result = new ArrayList<>();
 
         int[] clone = currentPath.clone();
-        List<Integer> optimalPath = new ArrayList<>();
+        List<Integer> optimalWay = new ArrayList<>();
 
-        optimalPath.addAll(Arrays.stream(clone).boxed().collect(Collectors.toList()));
+        optimalWay.addAll(Arrays.stream(clone).boxed().collect(Collectors.toList()));
 
         if (!selection.getAlgorithmName().equals(Constants.THE_HELD_KARP_LOWER_BOUND)) {
-            optimalPath.add(optimalPath.get(0));
+            optimalWay.add(optimalWay.get(0));
         }
 
-        for (int i = 0; i < optimalPath.size(); i++) {
+        for (int i = 0; i < optimalWay.size(); i++) {
             try {
-                LocationDto locationDto = selection.getLocationDtos().get(optimalPath.get(i)).clone();
+                LocationDto locationDto = selection.getLocationDtos().get(optimalWay.get(i)).clone();
                 locationDto.setIndex(i);
                 result.add(locationDto);
             } catch (CloneNotSupportedException e) {
-                e.printStackTrace();
+                log.error(e.getMessage());
             }
         }
         return result;
@@ -221,7 +221,6 @@ public class TspAlgorithm implements Algorithm {
             randomPath[index] = randomPath[i];
             randomPath[i] = a;
         }
-        ;
 
         return randomPath;
     }
@@ -256,21 +255,30 @@ public class TspAlgorithm implements Algorithm {
         return sum;
     }
 
-    private void setupStages() {
+    void setupStages() {
         List<LocationDto> locations = selection.getResultList();
         stagesMap = new HashMap<>();
         durationsMap = new HashMap<>();
 
         for (int i = 0; i < locations.size(); i++) {
-            int firstIndex = i == locations.size() - 1 ? locations.get(0).getIndex() : locations.get(i).getIndex();
-            int secondIndex = i == locations.size() - 1 ? locations.get(i).getIndex() : locations.get(i + 1).getIndex();
+            long firstId = i == locations.size() - 1 ? locations.get(0).getId() : locations.get(i).getId();
+            long secondId = i == locations.size() - 1 ? locations.get(i).getId() : locations.get(i + 1).getId();
 
-            if (secondIndex == locations.size() - 1) {
-                secondIndex = locations.get(0).getIndex();
+            int indexA = 0;
+            int indexB = 0;
+
+            List<LocationDto> locationDtos = selection.getLocationDtos();
+            for (int j = 0; j < locationDtos.size(); j++) {
+                if (locationDtos.get(j).getId().equals(firstId)) {
+                    indexA = j;
+                }
+                if (locationDtos.get(j).getId().equals(secondId)) {
+                    indexB = j;
+                }
             }
 
-            int dist = distancesArray[firstIndex][secondIndex];
-            int dur = durationsArray[firstIndex][secondIndex];
+            int dist = distancesArray[indexA][indexB];
+            int dur = durationsArray[indexA][indexB];
             stagesMap.put(i, dist);
             durationsMap.put(i, dur);
         }
