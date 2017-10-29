@@ -24,4 +24,8 @@ public class Location {
     String placeName;
     LatLon latLon;
     Integer index;
+
+    public Location clone() throws CloneNotSupportedException {
+        return (Location) super.clone();
+    }
 }

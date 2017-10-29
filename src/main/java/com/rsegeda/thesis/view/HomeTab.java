@@ -182,6 +182,7 @@ public class HomeTab extends HorizontalLayout {
                 if (selectedPrediction.getPlaceId() == null) {
                     return;
                 }
+
                 Places.Response<Place> searchPlaceResponse =
                         Places.details(Places.Params.create().placeId(selectedPrediction.getPlaceId().getId()));
 

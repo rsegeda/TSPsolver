@@ -175,12 +175,17 @@ public class ResultsTab extends HorizontalLayout {
 
         locationGrid.setSizeFull();
         locationGrid.addStyleName("locationGrid");
-        locationGrid.addColumn(LocationDto::getIndex).setCaption("Order").setExpandRatio(2);
-        locationGrid.addColumn(LocationDto::getPlaceName).setCaption("Name").setExpandRatio(78);
+        locationGrid.addColumn(locationDto -> locationDto.getIndex() + 1).setCaption("Order").setExpandRatio(2);
+        locationGrid.addColumn(LocationDto::getPlaceName).setCaption("Name").setExpandRatio(58);
 
         //TODO change to HTML renderer and add font icons etc.
         locationGrid.addColumn(locationDto -> selection.getDistanceStagesMap()
-                .get(locationDto.getId()) / 1000 + "km").setCaption("Stage").setExpandRatio(20);
+                .get(locationDto.getIndex()) / 1000 + "km").setCaption("Distance").setExpandRatio(20);
+        locationGrid.addColumn(locationDto -> {
+            int s = selection.getDurationStagesMap().get(locationDto.getIndex
+                    ());
+            return String.format("%d:%02d:%02d", s / 3600, (s % 3600) / 60, (s % 60));
+        }).setCaption("Duration").setExpandRatio(20);
 
         // Allow column hiding
         locationGrid.getColumns().forEach(column -> column.setHidable(true));
@@ -213,9 +218,7 @@ public class ResultsTab extends HorizontalLayout {
     @JmsListener(destination = "algorithmResult", containerFactory = "jmsListenerFactory")
     public void showResults() {
 
-        locationList = selection.getResultList().subList(0, selection.getResultList().size() - 2);
-        selection.getResultList().get(0).setIndex(1);
-        locationGrid.setItems(locationList);
+        locationGrid.setItems(selection.getResultList());
         pinMarkers();
         drawLines();
 

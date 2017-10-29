@@ -45,9 +45,9 @@ public class Selection {
      * Maps that have locationDtos' Ids and values of distance/duration to the next node.
      * Used to display on Results grid as an additional columns.
      */
-    private Map<Long, Integer> distanceStagesMap;
+    private Map<Integer, Integer> distanceStagesMap;
 
-    private Map<Long, Integer> durationStagesMap;
+    private Map<Integer, Integer> durationStagesMap;
 
     /**
      * 2D Arrays that contain durations and distances between all nodes.

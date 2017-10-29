@@ -5,8 +5,6 @@ import com.rsegeda.thesis.component.Selection;
 import com.rsegeda.thesis.config.Constants;
 import com.rsegeda.thesis.location.LocationDto;
 import com.rsegeda.thesis.utils.DirectionsService;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,9 +15,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  * Created by Roman Segeda on 25/08/2017.
@@ -44,8 +42,8 @@ public class TspAlgorithm implements Algorithm {
     int optimalDistance = Integer.MAX_VALUE;
     int optimalDuration = Integer.MAX_VALUE;
 
-    Map<Long, Integer> stagesMap;
-    Map<Long, Integer> durationsMap;
+    Map<Integer, Integer> stagesMap;
+    Map<Integer, Integer> durationsMap;
 
     List<Integer> optimalPath;
     private boolean stopAlgorithm = false;
@@ -143,6 +141,22 @@ public class TspAlgorithm implements Algorithm {
 
         List<LocationDto> result = compute();
 
+        for (int i = 0; i < result.size(); i++) {
+            result.get(i).setIndex(i);
+        }
+
+        if (!Objects.equals(result.get(0).getId(), result.get(result.size() - 1).getId())) {
+
+            try {
+                LocationDto first = result.get(0).clone();
+                first.setIndex(result.size());
+                result.add(first);
+
+            } catch (CloneNotSupportedException e) {
+                e.printStackTrace();
+            }
+        }
+
         selection.setResultList(result);
         optimalDistance = getCurrentDistance();
         optimalDuration = getCurrentDuration();
@@ -150,20 +164,14 @@ public class TspAlgorithm implements Algorithm {
         selection.setResultDuration(optimalDuration);
 
         setupStages();
-
         selection.setDistanceStagesMap(stagesMap);
         selection.setDurationStagesMap(durationsMap);
+
 
         setProgress(100);
         selection.setProgress(getProgress());
         selection.setState(Constants.READY_STATE);
         jmsTemplate.convertAndSend(Constants.STATE_UPDATE_JMS, "");
-
-        int index = 1;
-        for (LocationDto locationDto : result) {
-            locationDto.setIndex(index);
-            index++;
-        }
 
         selection.setResultList(result);
         jmsTemplate.convertAndSend("algorithmResult", "");
@@ -177,10 +185,19 @@ public class TspAlgorithm implements Algorithm {
         List<Integer> optimalPath = new ArrayList<>();
 
         optimalPath.addAll(Arrays.stream(clone).boxed().collect(Collectors.toList()));
-        optimalPath.add(optimalPath.get(0));
+
+        if (!selection.getAlgorithmName().equals(Constants.THE_HELD_KARP_LOWER_BOUND)) {
+            optimalPath.add(optimalPath.get(0));
+        }
 
         for (int i = 0; i < optimalPath.size(); i++) {
-            result.add(selection.getLocationDtos().get(optimalPath.get(i)));
+            try {
+                LocationDto locationDto = selection.getLocationDtos().get(optimalPath.get(i)).clone();
+                locationDto.setIndex(i);
+                result.add(locationDto);
+            } catch (CloneNotSupportedException e) {
+                e.printStackTrace();
+            }
         }
         return result;
     }
@@ -192,17 +209,19 @@ public class TspAlgorithm implements Algorithm {
 
         int[] randomPath = new int[numberOfCities];
 
-        IntStream.range(0, numberOfCities - 1).forEach(i -> randomPath[i] = i);
-
+        for (int i = 0; i < numberOfCities; i++) {
+            randomPath[i] = i;
+        }
         Random random = new Random();
 
-        IntStream.range(0, numberOfCities - 1).forEach(i -> {
+        for (int i = 0; i < numberOfCities; i++) {
             int index = random.nextInt(i + 1);
             // swap elements
             int a = randomPath[index];
             randomPath[index] = randomPath[i];
             randomPath[i] = a;
-        });
+        }
+        ;
 
         return randomPath;
     }
@@ -238,35 +257,24 @@ public class TspAlgorithm implements Algorithm {
     }
 
     private void setupStages() {
-
         List<LocationDto> locations = selection.getResultList();
-
         stagesMap = new HashMap<>();
         durationsMap = new HashMap<>();
 
         for (int i = 0; i < locations.size(); i++) {
-            int locationIndex = 0;
-            int locationNextIndex = 0;
-            long locationId = i == locations.size() - 1 ? locations.get(0).getId() : locations.get(i).getId();
-            long locationNextId = i == locations.size() - 1 ? locations.get(i).getId() : locations.get(i + 1).getId();
+            int firstIndex = i == locations.size() - 1 ? locations.get(0).getIndex() : locations.get(i).getIndex();
+            int secondIndex = i == locations.size() - 1 ? locations.get(i).getIndex() : locations.get(i + 1).getIndex();
 
-            for (int j = 0; j < numberOfCities; j++) {
-                if (selection.getLocationDtos().get(j).getId().equals(locationId)) {
-                    locationIndex = j;
-                }
-                if (selection.getLocationDtos().get(j).getId().equals(locationNextId)) {
-                    locationNextIndex = j;
-                }
+            if (secondIndex == locations.size() - 1) {
+                secondIndex = locations.get(0).getIndex();
             }
 
-            int distOther = distancesArray[locationIndex][locationNextIndex];
-            int durOther = durationsArray[locationIndex][locationNextIndex];
-
-            if (i != locations.size() - 1) {
-                stagesMap.put(locations.get(locationIndex).getId(), distOther);
-                durationsMap.put(locations.get(locationIndex).getId(), durOther);
-            }
+            int dist = distancesArray[firstIndex][secondIndex];
+            int dur = durationsArray[firstIndex][secondIndex];
+            stagesMap.put(i, dist);
+            durationsMap.put(i, dur);
         }
+
     }
 
     @Override
@@ -276,15 +284,6 @@ public class TspAlgorithm implements Algorithm {
 
     private void setStopAlgorithm(boolean stopAlgorithm) {
         this.stopAlgorithm = stopAlgorithm;
-    }
-
-    @Data
-    @AllArgsConstructor
-    static class DataMatrix {
-
-        int[][] distancesArray;
-        int[][] durationsArray;
-
     }
 
 }

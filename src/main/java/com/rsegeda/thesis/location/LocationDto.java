@@ -13,13 +13,17 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 @Builder
-public final class LocationDto {
+public final class LocationDto implements Cloneable {
 
     Long id;
     String placeId;
     String placeName;
     LatLon latLon;
     Integer index;
+
+    public LocationDto clone() throws CloneNotSupportedException {
+        return (LocationDto) super.clone();
+    }
 }
 
 
