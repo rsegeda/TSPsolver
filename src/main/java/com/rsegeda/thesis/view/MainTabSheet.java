@@ -40,6 +40,7 @@ public class MainTabSheet extends TabSheet {
         this.addTab(resultsTab, "Results");
         this.addTab(settingsTab, "Settings");
         this.addTab(infoTab, "Info");
+
     }
 
     @JmsListener(destination = "runAlgorithm", containerFactory = "jmsListenerFactory")

@@ -55,7 +55,7 @@ public class SettingsTab extends HorizontalLayout {
 
     private void setupAlgorithmSettingsLayout(String s, VerticalLayout verticalLayout) {
         switch (s) {
-            case Constants.MOCKUP_ALGORITHM:
+            case Constants.DRUNKEN_SAILOR_ALGORITHM:
                 break;
             case Constants.THE_HELD_KARP_LOWER_BOUND:
                 break;

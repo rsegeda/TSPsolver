@@ -47,15 +47,15 @@ public class HomeTab extends HorizontalLayout {
     private final transient Properties properties;
     private transient Selection selection;
     private transient LocationService locationService;
-    /*
-    Right panel
+    /**
+     * Right panel
      */
     private final VerticalLayout rightPanel = new VerticalLayout();
     private transient JmsTemplate jmsTemplate;
     private GoogleMap googleMap;
     private List<GoogleMapMarker> googleMapMarkers = new ArrayList<>();
-    /*
-    Left panel
+    /**
+     * Left panel
      */
     private transient Place.Prediction selectedPrediction = null;
     private transient List<LocationDto> locationList;
@@ -63,8 +63,6 @@ public class HomeTab extends HorizontalLayout {
 
     private VerticalLayout leftPanel = new VerticalLayout();
     private HorizontalLayout basicSetupLayout = new HorizontalLayout();
-    private List<String> algorithms = new ArrayList<>();
-    private List<String> goals = new ArrayList<>();
     private HorizontalLayout addLocationLayout = new HorizontalLayout();
     private HorizontalLayout locationGridLayout = new HorizontalLayout();
     private Grid<LocationDto> locationGrid = new Grid<>();
@@ -112,15 +110,15 @@ public class HomeTab extends HorizontalLayout {
 
     private void setupBasicSetupLayout() {
         RadioButtonGroup<String> algorithmRadioButtonGroup;
-        algorithmRadioButtonGroup = new RadioButtonGroup<>("Algorithm", algorithms);
-        algorithmRadioButtonGroup.setSelectedItem(algorithms.get(0));
+        algorithmRadioButtonGroup = new RadioButtonGroup<>("Algorithm", Constants.ALGORITHMS);
+        algorithmRadioButtonGroup.setSelectedItem(Constants.DRUNKEN_SAILOR_ALGORITHM);
 
         algorithmRadioButtonGroup.addStyleName("algorithmOption");
         basicSetupLayout.addComponent(algorithmRadioButtonGroup);
 
-        RadioButtonGroup<String> goalRadioButtonGroup = new RadioButtonGroup<>("Goal", goals);
-        goalRadioButtonGroup.setSelectedItem(goals.get(0));
-        basicSetupLayout.addComponent(goalRadioButtonGroup);
+        RadioButtonGroup<String> modeRadioButtonGroup = new RadioButtonGroup<>("Mode", Constants.MODES);
+        modeRadioButtonGroup.setSelectedItem(Constants.MODE_DISTANCE);
+        basicSetupLayout.addComponent(modeRadioButtonGroup);
 
         Button runButton = new Button("Run");
         runButton.setIcon(VaadinIcons.PLAY);
@@ -144,8 +142,9 @@ public class HomeTab extends HorizontalLayout {
             return;
         }
         selection.setAlgorithmName(algorithm);
-        selection.setLocationDtos(new ArrayList<>());
-        locationList.forEach(locationDto -> selection.getLocationDtos().add(locationDto));
+        //        selection.setMode();
+        selection.setInputList(new ArrayList<>());
+        locationList.forEach(locationDto -> selection.getInputList().add(locationDto));
 
         notifyMainTabSheet();
     }
@@ -217,6 +216,8 @@ public class HomeTab extends HorizontalLayout {
             createMarker(locationDto.getPlaceName(), locationDto.getLatLon());
 
             locationGrid.setItems(locationList);
+
+            selection.setChanged(true);
         });
 
         addLocationLayout.addComponents(addLocationLabel, addLocationTextField, addLocationButton);
@@ -319,8 +320,6 @@ public class HomeTab extends HorizontalLayout {
                     null, "english");
 
             locationList = new ArrayList<>();
-            algorithms.addAll(Constants.ALGORITHMS);
-            goals.addAll(Constants.GOALS);
 
             setupLeftPanel();
             setupRightPanel();

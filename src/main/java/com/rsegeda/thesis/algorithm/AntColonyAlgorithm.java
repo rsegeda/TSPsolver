@@ -38,9 +38,6 @@ public class AntColonyAlgorithm extends TspAlgorithm implements Algorithm {
     @Override
     public List<LocationDto> compute() {
 
-        //         Initialization
-        distancesArray = selection.getDistances();
-        numberOfCities = distancesArray.length;
         int numberOfAnts = (int) (numberOfCities * selection.getSettings().getAotAntGroupSize());
 
         trails = new double[numberOfCities][numberOfCities];

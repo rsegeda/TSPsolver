@@ -29,7 +29,7 @@ public class HeldKarpAlgorithm extends TspAlgorithm {
     @Override
     public List<LocationDto> compute() {
 
-        int size = selection.getLocationDtos().size();
+        int size = selection.getInputList().size();
         // Initial variables to start the algorithm
         int[] vertices = new int[size - 1];
 
@@ -59,7 +59,7 @@ public class HeldKarpAlgorithm extends TspAlgorithm {
 
         // Exit - last node case
         if (size == 0) {
-            newDistance = distance + selection.getDistances()[initial][0];
+            newDistance = distance + distancesArray[initial][0];
 
             // Update shortest route if not exceeded the optimal
             // Add first location to route and change optimalDistance
@@ -69,7 +69,7 @@ public class HeldKarpAlgorithm extends TspAlgorithm {
                 optimalPath = path;
             }
 
-            return (selection.getDistances()[initial][0]);
+            return (distancesArray[initial][0]);
         }
 
         // If temporary distance is higher than current optimal - skip this calculation
@@ -98,7 +98,7 @@ public class HeldKarpAlgorithm extends TspAlgorithm {
                 }
 
                 // Distance between parent and current node
-                int currentDistance = selection.getDistances()[initial][vertices[a]];
+                int currentDistance = distancesArray[initial][vertices[a]];
 
                 // Current calculated distance including last node
                 newDistance = currentDistance + distance;

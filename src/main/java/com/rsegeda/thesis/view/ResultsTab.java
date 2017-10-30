@@ -48,6 +48,7 @@ public class ResultsTab extends HorizontalLayout {
     private Label selectedAlgorithmLabel;
     private Label progressLabel;
     private Label distanceLabel;
+    private Label durationLabel;
 
     @SuppressWarnings("FieldCanBeLocal")
     private HorizontalLayout infoPanel;
@@ -98,6 +99,9 @@ public class ResultsTab extends HorizontalLayout {
         if (distanceLabel != null && distanceLabel.isAttached()) {
             progressPanel.removeComponent(distanceLabel);
         }
+        if (durationLabel != null && durationLabel.isAttached()) {
+            progressPanel.removeComponent(durationLabel);
+        }
 
         if (progressLabel == null) {
             progressLabel = new Label();
@@ -116,7 +120,7 @@ public class ResultsTab extends HorizontalLayout {
 
         switch (selectedAlgorithm) {
 
-            case Constants.MOCKUP_ALGORITHM:
+            case Constants.DRUNKEN_SAILOR_ALGORITHM:
                 tspAlgorithm = new TspAlgorithm(selection, jmsTemplate, directionsService);
                 break;
 
@@ -218,24 +222,27 @@ public class ResultsTab extends HorizontalLayout {
     @JmsListener(destination = "algorithmResult", containerFactory = "jmsListenerFactory")
     public void showResults() {
 
-        locationGrid.setItems(selection.getResultList());
+        locationGrid.setItems(selection.getOutputList());
         pinMarkers();
         drawLines();
 
         distanceLabel = new Label("Calculated Distance: " + selection.getResultDistance() / 1000 + "km");
-        progressPanel.addComponent(distanceLabel);
+        Integer resultDuration = selection.getResultDuration();
+        durationLabel = new Label("Calculated Duration: " + String.format("%dh:%02dm:%02ds", resultDuration / 3600,
+                (resultDuration % 3600) / 60, (resultDuration % 60)));
+        progressPanel.addComponents(distanceLabel, durationLabel);
     }
 
     private void drawLines() {
-        List<LocationDto> locationDtos = selection.getResultList();
+        List<LocationDto> locationDtos = selection.getOutputList();
 
         for (int i = 0; i < locationDtos.size(); i++) {
             if (i == locationDtos.size() - 1) {
                 GoogleMapPolyline polyline = new GoogleMapPolyline(
                         Arrays.asList(locationDtos.get(0).getLatLon(), locationDtos.get(i).getLatLon()),
-                        String.format("#%02x%02x%02x", 254,
-                                i * 255 / locationDtos.size(),
-                                i * 255 / locationDtos.size()),
+                        String.format("#%02x%02x%02x", 100,
+                                i * 100 / locationDtos.size(),
+                                i * 100 / locationDtos.size()),
                         0.8, 5);
                 polylines.add(polyline);
                 googleMap.addPolyline(polyline);
@@ -243,7 +250,7 @@ public class ResultsTab extends HorizontalLayout {
                 GoogleMapPolyline polyline = new GoogleMapPolyline(
                         Arrays.asList(locationDtos.get(i).getLatLon(), locationDtos.get(i + 1).getLatLon()),
                         String.format("#%02x%02x%02x",
-                                254, i * 255 / locationDtos.size(),
+                                10, i * 255 / locationDtos.size(),
                                 i * 255 / locationDtos.size()),
                         0.8, 5);
                 polylines.add(polyline);
@@ -266,7 +273,7 @@ public class ResultsTab extends HorizontalLayout {
     }
 
     private void pinMarkers() {
-        selection.getResultList().forEach(locationDto -> createMarker(locationDto.getPlaceName(), locationDto
+        selection.getOutputList().forEach(locationDto -> createMarker(locationDto.getPlaceName(), locationDto
                 .getLatLon()));
     }
 

@@ -25,14 +25,24 @@ public class Selection {
     private String algorithmName;
 
     /**
+     * Cache flag
+     */
+    private Boolean changed;
+
+    /**
+     * Active mode - either time or distance
+     */
+    private String mode = Constants.MODE_DISTANCE;
+
+    /**
      * List of locations on input
      */
-    private List<LocationDto> locationDtos;
+    private List<LocationDto> inputList;
 
     /**
      * List of locations on output
      */
-    private List<LocationDto> resultList;
+    private List<LocationDto> outputList;
 
     /**
      * Results of algorithms computation.
@@ -42,7 +52,7 @@ public class Selection {
     private Integer resultDuration;
 
     /**
-     * Maps that have locationDtos' Ids and values of distance/duration to the next node.
+     * Maps that have inputList' Ids and values of distance/duration to the next node.
      * Used to display on Results grid as an additional columns.
      */
     private Map<Integer, Integer> distanceStagesMap;
@@ -63,5 +73,6 @@ public class Selection {
 
     public Selection() {
         settings = new Settings();
+        setChanged(true);
     }
 }

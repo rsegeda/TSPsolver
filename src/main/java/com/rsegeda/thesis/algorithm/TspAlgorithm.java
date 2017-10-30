@@ -50,8 +50,10 @@ public class TspAlgorithm implements Algorithm {
 
     @Getter
     public Thread thread;
+
     @Getter
     public int progress = 0;
+    private List<LocationDto> inputList;
 
     @SuppressWarnings("SpringJavaAutowiredMembersInspection")
     @Autowired
@@ -76,10 +78,8 @@ public class TspAlgorithm implements Algorithm {
     @Override
     public void prepareData() {
 
-        int size = selection.getLocationDtos().size();
-
-        int[][] distances = new int[size][size];
-        int[][] durations = new int[size][size];
+        int[][] distances = new int[numberOfCities][numberOfCities];
+        int[][] durations = new int[numberOfCities][numberOfCities];
 
         setProgress(0);
         selection.setProgress(progress);
@@ -87,24 +87,22 @@ public class TspAlgorithm implements Algorithm {
         jmsTemplate.convertAndSend(Constants.STATE_UPDATE_JMS, "");
 
         // Setup distances matrix
-        for (int a = 0; a < size; a++) {
-            for (int b = 0; b < size; b++) {
+        for (int a = 0; a < numberOfCities; a++) {
+            for (int b = 0; b < numberOfCities; b++) {
                 if (a == b) {
                     distances[a][b] = 0;
                     durations[a][b] = 0;
 
                 } else {
-                    DirectionsResult directionsResult = directionsService.getDirection(selection.getLocationDtos()
-                                    .get(a)
-                                    .getPlaceName(),
-                            selection.getLocationDtos().get(b).getPlaceName());
+                    DirectionsResult directionsResult = directionsService.getDirection(inputList.get(a).getPlaceName(),
+                            inputList.get(b).getPlaceName());
                     Long distance = directionsResult.routes[0].legs[0].distance.inMeters;
                     distances[a][b] = distance.intValue();
                     Long interval = directionsResult.routes[0].legs[0].duration.inSeconds;
                     durations[a][b] = interval.intValue();
                 }
             }
-            setProgress(a * 100 / selection.getLocationDtos().size());
+            setProgress(a * 100 / this.numberOfCities);
             selection.setProgress(getProgress());
             jmsTemplate.convertAndSend(Constants.STATE_UPDATE_JMS, "");
         }
@@ -123,13 +121,19 @@ public class TspAlgorithm implements Algorithm {
 
     public void run() {
 
-        numberOfCities = selection.getLocationDtos().size();
+        inputList = selection.getInputList();
+        numberOfCities = inputList.size();
         distancesArray = selection.getDistances();
         durationsArray = selection.getDurations();
 
-        prepareData();
-        selection.setDistances(distancesArray);
-        selection.setDurations(durationsArray);
+        if (selection.getChanged()) {
+            prepareData();
+            selection.setChanged(false);
+            selection.setDistances(distancesArray);
+            selection.setDurations(durationsArray);
+        }
+
+
 
         setProgress(0);
         selection.setProgress(getProgress());
@@ -139,25 +143,33 @@ public class TspAlgorithm implements Algorithm {
         optimalDistance = Integer.MAX_VALUE;
         optimalPath = new ArrayList<>();
 
-        List<LocationDto> result = compute();
-
-        for (int i = 0; i < result.size(); i++) {
-            result.get(i).setIndex(i);
+        if (selection.getMode().equals(Constants.MODE_TIME)) {
+            distancesArray = selection.getDurations();
         }
 
-        if (!Objects.equals(result.get(0).getId(), result.get(result.size() - 1).getId())) {
+        List<LocationDto> outputList = compute();
+
+        if (selection.getMode().equals(Constants.MODE_TIME)) {
+            distancesArray = selection.getDistances();
+        }
+
+        for (int i = 0; i < outputList.size(); i++) {
+            outputList.get(i).setIndex(i);
+        }
+
+        if (!Objects.equals(outputList.get(0).getId(), outputList.get(outputList.size() - 1).getId())) {
 
             try {
-                LocationDto first = result.get(0).clone();
-                first.setIndex(result.size());
-                result.add(first);
+                LocationDto first = outputList.get(0).clone();
+                first.setIndex(outputList.size());
+                outputList.add(first);
 
             } catch (CloneNotSupportedException e) {
                 log.error(e.getMessage());
             }
         }
 
-        selection.setResultList(result);
+        selection.setOutputList(outputList);
         optimalDistance = getCurrentDistance();
         optimalDuration = getCurrentDuration();
         selection.setResultDistance(optimalDistance);
@@ -167,13 +179,12 @@ public class TspAlgorithm implements Algorithm {
         selection.setDistanceStagesMap(stagesMap);
         selection.setDurationStagesMap(durationsMap);
 
-
         setProgress(100);
         selection.setProgress(getProgress());
         selection.setState(Constants.READY_STATE);
         jmsTemplate.convertAndSend(Constants.STATE_UPDATE_JMS, "");
 
-        selection.setResultList(result);
+        selection.setOutputList(outputList);
         jmsTemplate.convertAndSend("algorithmResult", "");
     }
 
@@ -192,7 +203,7 @@ public class TspAlgorithm implements Algorithm {
 
         for (int i = 0; i < optimalWay.size(); i++) {
             try {
-                LocationDto locationDto = selection.getLocationDtos().get(optimalWay.get(i)).clone();
+                LocationDto locationDto = inputList.get(optimalWay.get(i)).clone();
                 locationDto.setIndex(i);
                 result.add(locationDto);
             } catch (CloneNotSupportedException e) {
@@ -256,7 +267,7 @@ public class TspAlgorithm implements Algorithm {
     }
 
     void setupStages() {
-        List<LocationDto> locations = selection.getResultList();
+        List<LocationDto> locations = selection.getOutputList();
         stagesMap = new HashMap<>();
         durationsMap = new HashMap<>();
 
@@ -267,12 +278,11 @@ public class TspAlgorithm implements Algorithm {
             int indexA = 0;
             int indexB = 0;
 
-            List<LocationDto> locationDtos = selection.getLocationDtos();
-            for (int j = 0; j < locationDtos.size(); j++) {
-                if (locationDtos.get(j).getId().equals(firstId)) {
+            for (int j = 0; j < inputList.size(); j++) {
+                if (inputList.get(j).getId().equals(firstId)) {
                     indexA = j;
                 }
-                if (locationDtos.get(j).getId().equals(secondId)) {
+                if (inputList.get(j).getId().equals(secondId)) {
                     indexB = j;
                 }
             }
