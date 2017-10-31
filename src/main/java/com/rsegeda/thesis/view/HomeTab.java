@@ -125,6 +125,8 @@ public class HomeTab extends HorizontalLayout {
 
         runButton.addClickListener((Button.ClickListener) clickEvent -> {
             Optional<String> selectedItem = algorithmRadioButtonGroup.getSelectedItem();
+            Optional<String> selectedMode = modeRadioButtonGroup.getSelectedItem();
+            selectedMode.ifPresent(s -> selection.setMode(s));
             selectedItem.ifPresent(this::runAlgorithm);
         });
         basicSetupLayout.addComponent(runButton);
@@ -142,7 +144,6 @@ public class HomeTab extends HorizontalLayout {
             return;
         }
         selection.setAlgorithmName(algorithm);
-        //        selection.setMode();
         selection.setInputList(new ArrayList<>());
         locationList.forEach(locationDto -> selection.getInputList().add(locationDto));
 

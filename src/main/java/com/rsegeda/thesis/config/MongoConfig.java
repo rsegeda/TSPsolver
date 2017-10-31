@@ -11,7 +11,7 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
  * Created by Roman Segeda on 02/07/2017.
  */
 @Configuration
-@EnableMongoRepositories(basePackages = {"com.rsegeda.thesis.location", "com.rsegeda.thesis.route"})
+@EnableMongoRepositories(basePackages = {"com.rsegeda.thesis.location"})
 @EnableConfigurationProperties({Properties.class})
 public class MongoConfig extends AbstractMongoConfiguration {
 

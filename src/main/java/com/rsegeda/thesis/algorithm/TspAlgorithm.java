@@ -34,19 +34,17 @@ public class TspAlgorithm implements Algorithm {
     Selection selection;
 
     int[][] distancesArray;
-    int[][] durationsArray;
+    private int[][] durationsArray;
 
     int numberOfCities;
     int[] currentPath;
 
     int optimalDistance = Integer.MAX_VALUE;
-    int optimalDuration = Integer.MAX_VALUE;
 
-    Map<Integer, Integer> stagesMap;
-    Map<Integer, Integer> durationsMap;
+    private Map<Integer, Integer> stagesMap;
+    private Map<Integer, Integer> durationsMap;
 
     List<Integer> optimalPath;
-    private boolean stopAlgorithm = false;
 
     @Getter
     public Thread thread;
@@ -133,8 +131,6 @@ public class TspAlgorithm implements Algorithm {
             selection.setDurations(durationsArray);
         }
 
-
-
         setProgress(0);
         selection.setProgress(getProgress());
         selection.setState(Constants.COMPUTING_STATE);
@@ -171,8 +167,9 @@ public class TspAlgorithm implements Algorithm {
 
         selection.setOutputList(outputList);
         optimalDistance = getCurrentDistance();
-        optimalDuration = getCurrentDuration();
         selection.setResultDistance(optimalDistance);
+
+        int optimalDuration = getCurrentDuration();
         selection.setResultDuration(optimalDuration);
 
         setupStages();
@@ -254,7 +251,7 @@ public class TspAlgorithm implements Algorithm {
     /**
      * Returns the current duration
      */
-    int getCurrentDuration() {
+    private int getCurrentDuration() {
         int sum = 0;
 
         for (int i = 0; i < this.numberOfCities; i++) {
@@ -266,7 +263,7 @@ public class TspAlgorithm implements Algorithm {
         return sum;
     }
 
-    void setupStages() {
+    private void setupStages() {
         List<LocationDto> locations = selection.getOutputList();
         stagesMap = new HashMap<>();
         durationsMap = new HashMap<>();
@@ -293,15 +290,6 @@ public class TspAlgorithm implements Algorithm {
             durationsMap.put(i, dur);
         }
 
-    }
-
-    @Override
-    public void stop() {
-        setStopAlgorithm(true);
-    }
-
-    private void setStopAlgorithm(boolean stopAlgorithm) {
-        this.stopAlgorithm = stopAlgorithm;
     }
 
 }

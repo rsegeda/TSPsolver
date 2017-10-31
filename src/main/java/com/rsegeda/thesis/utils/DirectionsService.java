@@ -6,7 +6,9 @@ import com.google.maps.errors.ApiException;
 import com.google.maps.model.DirectionsResult;
 import com.google.maps.model.TravelMode;
 import com.google.maps.model.Unit;
+import com.rsegeda.thesis.config.Properties;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -20,8 +22,9 @@ public class DirectionsService {
 
     private GeoApiContext geoApiContext;
 
-    public DirectionsService() {
-        this.geoApiContext = new GeoApiContext().setApiKey("AIzaSyBmonDj8j48U0snyCoRn8SgnqMOc7t6QtA");
+    @Autowired
+    public DirectionsService(Properties properties) {
+        this.geoApiContext = new GeoApiContext().setApiKey(properties.getApiKey());
     }
 
     public DirectionsResult getDirection(String a, String b) {

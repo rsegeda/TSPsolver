@@ -43,7 +43,6 @@ public class ResultsTab extends HorizontalLayout {
     private transient DirectionsService directionsService;
 
     private transient TspAlgorithm tspAlgorithm;
-    private transient List<LocationDto> locationList;
     private String selectedAlgorithm = "";
     private Label selectedAlgorithmLabel;
     private Label progressLabel;
@@ -61,6 +60,7 @@ public class ResultsTab extends HorizontalLayout {
      */
     private VerticalLayout rightPanel;
     private GoogleMap googleMap;
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     private List<GoogleMapMarker> googleMapMarkers = new ArrayList<>();
     private List<GoogleMapPolyline> polylines = new ArrayList<>();
 
@@ -84,9 +84,6 @@ public class ResultsTab extends HorizontalLayout {
 
         if (ALGORITHMS.contains(selectedAlgorithm)) {
             tspAlgorithm.start();
-
-        } else if (tspAlgorithm != null) {
-            tspAlgorithm.stop();
         }
     }
 
@@ -148,8 +145,6 @@ public class ResultsTab extends HorizontalLayout {
             googleMap = new GoogleMap(properties.getApiKey(),
                     null, "english");
 
-            this.locationList = new ArrayList<>();
-
             setupResultsPanel();
             setSizeFull();
 
@@ -182,7 +177,6 @@ public class ResultsTab extends HorizontalLayout {
         locationGrid.addColumn(locationDto -> locationDto.getIndex() + 1).setCaption("Order").setExpandRatio(2);
         locationGrid.addColumn(LocationDto::getPlaceName).setCaption("Name").setExpandRatio(58);
 
-        //TODO change to HTML renderer and add font icons etc.
         locationGrid.addColumn(locationDto -> selection.getDistanceStagesMap()
                 .get(locationDto.getIndex()) / 1000 + "km").setCaption("Distance").setExpandRatio(20);
         locationGrid.addColumn(locationDto -> {
@@ -225,10 +219,11 @@ public class ResultsTab extends HorizontalLayout {
         locationGrid.setItems(selection.getOutputList());
         pinMarkers();
         drawLines();
-
-        distanceLabel = new Label("Calculated Distance: " + selection.getResultDistance() / 1000 + "km");
+        String prefixDist = selection.getMode().equalsIgnoreCase(Constants.MODE_DISTANCE) ? "Optimal" : "Calculated";
+        String prefixTime = selection.getMode().equalsIgnoreCase(Constants.MODE_TIME) ? "Optimal" : "Calculated";
+        distanceLabel = new Label(prefixDist + " Distance: " + selection.getResultDistance() / 1000 + "km");
         Integer resultDuration = selection.getResultDuration();
-        durationLabel = new Label("Calculated Duration: " + String.format("%dh:%02dm:%02ds", resultDuration / 3600,
+        durationLabel = new Label(prefixTime + " Time: " + String.format("%dh:%02dm:%02ds", resultDuration / 3600,
                 (resultDuration % 3600) / 60, (resultDuration % 60)));
         progressPanel.addComponents(distanceLabel, durationLabel);
     }

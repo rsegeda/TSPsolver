@@ -3,6 +3,7 @@ package com.rsegeda.thesis.algorithm;
 import com.rsegeda.thesis.component.Selection;
 import com.rsegeda.thesis.location.LocationDto;
 import com.rsegeda.thesis.utils.DirectionsService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.jms.core.JmsTemplate;
 
 import java.util.ArrayList;
@@ -19,11 +20,11 @@ import java.util.stream.IntStream;
  * @author Marco Dorigoa, Christian Blumb
  * @link http://www.sciencedirect.com/science/article/pii/S0304397505003798
  */
-
+@Slf4j
 public class AntColonyAlgorithm extends TspAlgorithm implements Algorithm {
 
-    private double trails[][];
-    private double probabilities[];
+    private double[][] trails;
+    private double[] probabilities;
 
     private List<Ant> ants = new ArrayList<>();
     private Random random = new Random();
@@ -71,7 +72,14 @@ public class AntColonyAlgorithm extends TspAlgorithm implements Algorithm {
     private void moveAnts() {
         IntStream.range(currentLocationIndex, numberOfCities - 1)
                 .forEach(i -> {
-                    ants.forEach(ant -> ant.visitLocation(currentLocationIndex, selectNextLocation(ant)));
+                    ants.forEach(ant -> {
+                        try {
+                            ant.visitLocation(currentLocationIndex, selectNextLocation(ant));
+                        } catch (AotException e) {
+                            log.error(e.getMessage());
+
+                        }
+                    });
                     currentLocationIndex++;
                 });
     }
@@ -105,7 +113,7 @@ public class AntColonyAlgorithm extends TspAlgorithm implements Algorithm {
         throw new AotException("Next location not found");
     }
 
-    private void calculateProbabilities(Ant ant) {
+    private void calculateProbabilities(Ant ant) throws AotException {
         int i = ant.trail[currentLocationIndex];
         double pheromone = 0.0;
 
@@ -126,6 +134,10 @@ public class AntColonyAlgorithm extends TspAlgorithm implements Algorithm {
                 double numerator = Math.pow(trails[i][j], selection.getSettings().getAotAlpha()) * Math.pow(1.0 /
                                 distancesArray[i][j],
                         selection.getSettings().getAotBeta());
+
+                if (pheromone == 0) {
+                    throw new AotException("Pheromonone is zero");
+                }
                 probabilities[j] = numerator / pheromone;
             }
         }
@@ -168,8 +180,8 @@ public class AntColonyAlgorithm extends TspAlgorithm implements Algorithm {
     public static class Ant {
 
         private int trailLength;
-        private int trail[];
-        private boolean visited[];
+        private int[] trail;
+        private boolean[] visited;
 
         Ant(int numberOfCities) {
             this.trailLength = numberOfCities;
@@ -202,9 +214,9 @@ public class AntColonyAlgorithm extends TspAlgorithm implements Algorithm {
 
     }
 
-    private class AotException extends RuntimeException {
+    private class AotException extends Exception {
 
-        public AotException(String reason) {
+        AotException(@SuppressWarnings("unused") String reason) {
         }
     }
 }

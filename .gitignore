@@ -1,7 +1,5 @@
 # Created by .ignore support plugin (hsz.mobi)
 ### Java template
-# Compiled class file
-*.class
 
 # Log file
 *.log
@@ -13,8 +11,6 @@
 .mtj.tmp/
 
 # Package Files #
-*.jar
-*.war
 *.ear
 *.zip
 *.tar.gz
@@ -80,4 +76,4 @@ fabric.properties
 # .nfs files are created when an open file is removed but is still being accessed
 .nfs*
 
-src/main/webapp/VAADIN/themes/mytheme/styles.scss.cache
+/src/main/webapp/VAADIN/themes/mytheme/styles.scss.cache

@@ -46,8 +46,4 @@ public interface Algorithm extends Runnable {
      */
     void run();
 
-    /**
-     * Stops an algorithm thread
-     */
-    void stop();
 }
