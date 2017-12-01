@@ -3,7 +3,7 @@
 // Defines the plaintext font size, weight and family. Font size affects general component sizing.
 //$v-font-size: 16px;
 //$v-font-weight: 300;
-//$v-font-family: "Open Sans", sans-serif;
+$v-font-family: "Alegreya Sans SC", sans-serif;
 // Defines the border used by all components.
 //$v-border: 1px solid (v-shade 0.7);
 //$v-border-radius: 4px;
@@ -38,7 +38,7 @@
 
 .v-label-appLabel {
   font-size: 200%;
-  font-family: "Open Sans", serif;
+  font-family: 'Open Sans', sans-serif;
 }
 
 //noinspection SpellCheckingInspection

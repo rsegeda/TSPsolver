@@ -142,6 +142,7 @@ public class LinKernighanAlgorithm extends TspAlgorithm {
             if (newPathIndex == -1) {
                 break;
             }
+
             indexArray.add(i, newPathIndex);
             int newPathIndexWithNextNode = getNextPossibleY(indexArray);
 

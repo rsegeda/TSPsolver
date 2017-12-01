@@ -39,7 +39,7 @@ public class HeldKarpAlgorithm extends TspAlgorithm {
 
         heldKarpProcedure(0, vertices, new ArrayList<>(), 0);
 
-        //        workaround for currentPath
+        // Workaround for the currentPath
         currentPath = new int[optimalPath.size()];
         for (int i = 0; i < optimalPath.size(); i++) {
             currentPath[i] = optimalPath.get(i);
@@ -83,7 +83,7 @@ public class HeldKarpAlgorithm extends TspAlgorithm {
             int[][] subPath = new int[size][(size - 1)];
             int optimal = Integer.MAX_VALUE;
 
-            // For each location
+            // For each vertex
             for (int a = 0; a < size; a++) {
 
                 // Each recursion new vertices list is constructed

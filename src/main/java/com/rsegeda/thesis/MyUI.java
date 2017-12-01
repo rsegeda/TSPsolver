@@ -2,6 +2,7 @@ package com.rsegeda.thesis;
 
 import com.rsegeda.thesis.config.Constants;
 import com.rsegeda.thesis.view.MainTabSheet;
+import com.vaadin.annotations.StyleSheet;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.VaadinServletConfiguration;
 import com.vaadin.event.UIEvents;
@@ -23,6 +24,7 @@ import javax.servlet.annotation.WebServlet;
  * The UI is initialized using {@link #init(VaadinRequest)}. This method is intended to be
  * overridden to add component to the user interface and initialize non-component functionality.
  */
+@StyleSheet({"http://fonts.googleapis.com/css?family=Alegreya+Sans+SC&subset=latin,latin-ext"})
 @Slf4j
 @Theme("mytheme")
 @SpringUI

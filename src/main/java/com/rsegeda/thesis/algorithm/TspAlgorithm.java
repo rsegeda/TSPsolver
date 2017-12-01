@@ -211,7 +211,7 @@ public class TspAlgorithm implements Algorithm {
     }
 
     /**
-     * Generates random path with drunken sailor algorithm
+     * Generates random path with the Drunken Sailor's Walk Problem approach
      */
     int[] getRandomPath() {
 
@@ -220,6 +220,7 @@ public class TspAlgorithm implements Algorithm {
         for (int i = 0; i < numberOfCities; i++) {
             randomPath[i] = i;
         }
+
         Random random = new Random();
 
         for (int i = 0; i < numberOfCities; i++) {
